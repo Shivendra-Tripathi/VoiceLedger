@@ -1,8 +1,11 @@
 package io.github.trip.shiv.vcledger.service;
 
+
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -77,6 +80,13 @@ public class CustomerService {
         User owner = userService.getUserByEmail(currentUserEmail);
         return customerRepository.findByUser_Id(owner.getId());
     }
+    
+    
+    @Transactional(readOnly = true)
+    public Page<Customer> getCustomers(String currentUserEmail,Pageable pageable) {
+        User owner = userService.getUserByEmail(currentUserEmail);
+        return customerRepository.findByUser_Id(owner.getId(),pageable);
+    }
 
     /**
      * A single customer, verified to belong to the authenticated user.
@@ -138,6 +148,12 @@ public class CustomerService {
     public List<Customer> searchCustomers(String currentUserEmail, String namePart) {
         User owner = userService.getUserByEmail(currentUserEmail);
         return customerRepository.findByUser_IdAndNameContainingIgnoreCase(owner.getId(), namePart);
+    }
+    
+    @Transactional(readOnly = true)
+    public Page<Customer> searchCustomers(String currentUserEmail, String namePart,Pageable pageable) {
+        User owner = userService.getUserByEmail(currentUserEmail);
+        return customerRepository.findByUser_IdAndNameContainingIgnoreCase(owner.getId(), namePart,pageable);
     }
     
     

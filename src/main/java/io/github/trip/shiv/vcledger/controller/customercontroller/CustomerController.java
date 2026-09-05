@@ -1,9 +1,13 @@
 package io.github.trip.shiv.vcledger.controller.customercontroller;
 
 
-import java.math.BigDecimal;
-import java.util.List;
 
+import java.math.BigDecimal;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -76,14 +80,19 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping
-    public ResponseEntity<List<CustomerResponse>> getAllCustomers() {
+    public ResponseEntity<Page<CustomerResponse>> getAllCustomers(
+    		@PageableDefault(
+    				page=0,
+    				size=10,
+    				sort="createdAt",
+					direction = Sort.Direction.DESC)
+    		Pageable pageable) {
     	User user = securityUtils.getAuthenticatedUser();
     	
-       List<CustomerResponse> customers = 
-    		   customerService.getAllCustomers(user.getEmail())
-    		   .stream()
+       Page<CustomerResponse> customers = 
+    		   customerService.getCustomers(user.getEmail(),pageable)
     		   .map(customer -> new CustomerResponse(customer))
-    		   .toList();
+    		   ;
        return ResponseEntity.ok(customers);
     }
 
@@ -133,13 +142,18 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping("/search/{name}")
-    public ResponseEntity<List<CustomerResponse>> searchCustomers(@PathVariable String name) {
+    public ResponseEntity<Page<CustomerResponse>> searchCustomers(@PathVariable String name,
+    		@PageableDefault(
+    				page=0,
+    				size=10,
+    				sort="createdAt",
+					direction = Sort.Direction.DESC)
+    		Pageable pageable) {
     	User user = securityUtils.getAuthenticatedUser();
-    	List<CustomerResponse> customerResponses = 
-    			customerService.searchCustomers(user.getEmail(), name)
-    			.stream()
+    	Page<CustomerResponse> customerResponses = 
+    			customerService.searchCustomers(user.getEmail(), name,pageable)
     			.map(customer->new CustomerResponse(customer))
-    			.toList();
+    			;
     	return ResponseEntity.ok(customerResponses);
     }
 
@@ -150,14 +164,19 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping("/{customerId}/transactions")
-    public ResponseEntity<List<TransactionResponse>> getCustomerTransactionHistory(@PathVariable Long customerId) {
+    public ResponseEntity<Page<TransactionResponse>> getCustomerTransactionHistory(@PathVariable Long customerId,
+    		@PageableDefault(
+    				page=0,
+    				size=10,
+    				sort="createdAt",
+					direction = Sort.Direction.DESC)
+    		Pageable pageable) {
    
     	User user = securityUtils.getAuthenticatedUser();
-    	List<TransactionResponse> responses = 
-    			transactionService.getCustomerTransactions(user.getEmail(), customerId)
-    			.stream()
+    	Page<TransactionResponse> responses = 
+    			transactionService.getCustomerTransactions(user.getEmail(), customerId,pageable)
     			.map(transaction->new TransactionResponse(transaction))
-    			.toList();
+    			;
     	return ResponseEntity.ok(responses);
     	
     }

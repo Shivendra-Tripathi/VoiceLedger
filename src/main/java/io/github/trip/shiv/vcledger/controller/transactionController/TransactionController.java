@@ -1,8 +1,10 @@
 package io.github.trip.shiv.vcledger.controller.transactionController;
 
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -74,13 +76,17 @@ public class TransactionController {
      * Requires authentication (JWT).
      */
     @GetMapping
-    public ResponseEntity<List<TransactionResponse>> getAllTransactions() {
+    public ResponseEntity<Page<TransactionResponse>> getAllTransactions(
+    		@PageableDefault( 
+    				size = 10,
+    			    sort = "createdAt",
+    			    direction = Sort.Direction.DESC) 
+    		Pageable pageable) {
         User user = securityUtils.getAuthenticatedUser();
-        List<TransactionResponse> response = 
-        		transactionService.getAllTransactions(user.getEmail())
-        		.stream()
-        		.map(transaction->new TransactionResponse(transaction))
-        		.toList();
+        Page<TransactionResponse> response = 
+        		transactionService.getTransactions(user.getEmail(),pageable)
+        		.map(transaction -> new TransactionResponse(transaction))
+        		;
         return ResponseEntity.ok(response);
     }
 

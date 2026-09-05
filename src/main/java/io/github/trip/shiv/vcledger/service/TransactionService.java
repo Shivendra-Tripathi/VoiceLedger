@@ -3,6 +3,8 @@ package io.github.trip.shiv.vcledger.service;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -123,6 +125,13 @@ public class TransactionService {
         Long userId = userService.getUserByEmail(currentUserEmail).getId();
         return transactionRepository.findByCustomer_UserIdOrderByCreatedAtDesc(userId);
     }
+    
+    
+    @Transactional(readOnly = true)
+    public Page<Transaction> getTransactions(String currentUserEmail,Pageable pageable){
+    	Long userId = userService.getUserByEmail(currentUserEmail).getId();
+    	return transactionRepository.findByCustomer_UserIdOrderByCreatedAtDesc(userId, pageable);
+    }
 
     /**
      * Full transaction history for one customer, most recent first.
@@ -135,6 +144,15 @@ public class TransactionService {
         customerService.getCustomerById(currentUserEmail, customerId); // ownership check; result unused
         return transactionRepository.findByCustomer_IdOrderByCreatedAtDesc(customerId);
     }
+    
+    
+    
+    @Transactional(readOnly = true)
+    public Page<Transaction> getCustomerTransactions(String currentUserEmail, Long customerId, Pageable pageable) {
+        customerService.getCustomerById(currentUserEmail, customerId); // ownership check; result unused
+        return transactionRepository.findByCustomer_IdOrderByCreatedAtDesc(customerId,pageable);
+    }
+
 
     /**
      * Update an existing transaction's editable fields.

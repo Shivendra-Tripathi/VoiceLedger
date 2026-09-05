@@ -4,6 +4,8 @@ package io.github.trip.shiv.vcledger.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import io.github.trip.shiv.vcledger.entity.Customer;
@@ -27,6 +29,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
     /** All customers belonging to a given shopkeeper. */
     List<Customer> findByUser_Id(Long userId);
+    Page<Customer> findByUser_Id(Long userId,Pageable pageable);
 
     /**
      * Ownership-checked single lookup — use this instead of plain
@@ -48,6 +51,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
      * (e.g. matching "Ram" against "Ramesh Kumar").
      */
     List<Customer> findByUser_IdAndNameContainingIgnoreCase(Long userId, String namePart);
+    Page<Customer> findByUser_IdAndNameContainingIgnoreCase(Long userId, String namePart,Pageable pageable);
+    
 
     /** Quick existence check, e.g. before creating a duplicate customer. */
     boolean existsByUser_IdAndNameIgnoreCase(Long userId, String name);
