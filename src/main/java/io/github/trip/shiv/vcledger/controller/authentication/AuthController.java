@@ -76,24 +76,24 @@ public class AuthController {
 
    
 
-    /**
-     * Invalidate the current session/refresh token.
-     */
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        return ResponseEntity
-        .status(HttpStatus.ACCEPTED)
-        .body("LogOut Done");
-    }
+//    /**
+//     * Invalidate the current session/refresh token.
+//     */
+//    @PostMapping("/logout")
+//    public ResponseEntity<String> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
+//        return ResponseEntity
+//        .status(HttpStatus.ACCEPTED)
+//        .body("LogOut Done");
+//    }
 
-    /**
-     * Return the currently authenticated user's profile.
-     */
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorization) {
-        // TODO: implement fetch-current-user logic
-        throw new UnsupportedOperationException("Not implemented yet");
-    }
+//    /**
+//     * Return the currently authenticated user's profile.
+//     */
+//    @GetMapping("/me")
+//    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorization) {
+//        // TODO: implement fetch-current-user logic
+//        throw new UnsupportedOperationException("Not implemented yet");
+//    }
 
     /**
      * Update the currently authenticated user's password.
