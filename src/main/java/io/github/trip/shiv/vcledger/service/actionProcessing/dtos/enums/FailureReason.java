@@ -1,0 +1,15 @@
+package io.github.trip.shiv.vcledger.service.actionProcessing.dtos.enums;
+
+public enum FailureReason {
+
+    CUSTOMER_NOT_FOUND,
+    TRANSACTION_NOT_FOUND,
+    INVALID_AMOUNT,
+    INSUFFICIENT_BALANCE,
+    DUPLICATE_TRANSACTION,
+    TRANSACTION_CREATION_FAILED,
+    TRANSACTION_UPDATE_FAILED,
+    DATABASE_ERROR,
+    UNAUTHORIZED,
+    UNKNOWN_ERROR
+}
