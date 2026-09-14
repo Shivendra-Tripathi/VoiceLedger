@@ -13,8 +13,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import io.github.trip.shiv.vcledger.business.enums.TransactionType;
 import io.github.trip.shiv.vcledger.entity.Transaction;
-import io.github.trip.shiv.vcledger.entity.TransactionType;
 
 /**
  * Repository for individual ledger entries.
@@ -62,7 +62,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
      */
     @Query("""
             SELECT COALESCE(SUM(
-                CASE WHEN t.type = io.github.trip.shiv.vcledger.entity.TransactionType.CREDIT
+                CASE WHEN t.type = io.github.trip.shiv.vcledger.business.enums.TransactionType.CREDIT
                      THEN t.amount ELSE -t.amount END), 0)
             FROM Transaction t
             WHERE t.customer.id = :customerId

@@ -1,6 +1,9 @@
 package io.github.trip.shiv.vcledger.controller;
 
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -9,12 +12,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import io.github.trip.shiv.vcledger.sarvamai.voicetotext.SarvamVoiceToTextService;
-import io.github.trip.shiv.vcledger.sarvamai.voicetotext.TranscriptionException;
-import io.github.trip.shiv.vcledger.sarvamai.voicetotext.VoiceToTextService;
-
-import java.io.IOException;
-import java.util.Map;
+import io.github.trip.shiv.vcledger.business.exceptions.TranscriptionException;
+import io.github.trip.shiv.vcledger.business.sarvamai.impls.SarvamVoiceToTextService;
+import io.github.trip.shiv.vcledger.business.sarvamai.interfaces.VoiceToTextService;
  
 /**
  * REST endpoint that accepts an uploaded audio file and returns it

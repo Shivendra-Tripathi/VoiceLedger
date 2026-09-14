@@ -9,12 +9,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import io.github.trip.shiv.vcledger.business.enums.TransactionType;
+import io.github.trip.shiv.vcledger.business.exceptions.InvalidTransactionException;
+import io.github.trip.shiv.vcledger.business.exceptions.TransactionNotFoundException;
 import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.Transaction;
-import io.github.trip.shiv.vcledger.entity.TransactionType;
+import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.TransactionRepository;
-import io.github.trip.shiv.vcledger.service.exception.InvalidTransactionException;
-import io.github.trip.shiv.vcledger.service.exception.TransactionNotFoundException;
 
 /**
  * Business logic for ledger Transactions.
@@ -87,6 +88,26 @@ public class TransactionService {
     public Transaction createTransaction(String currentUserEmail, Long customerId,
                                           BigDecimal amount, TransactionType type, String description) {
         Customer customer = customerService.getCustomerById(currentUserEmail, customerId);
+
+        validateAmount(amount);
+        validateType(type);
+
+        Transaction transaction = Transaction.builder()
+                .amount(amount)
+                .type(type)
+                .description(description)
+                .customer(customer)
+                .build();
+
+        return transactionRepository.save(transaction);
+    }
+    
+    
+    @Transactional
+    public Transaction createTransaction(Long userId, Long customerId,
+                                          BigDecimal amount, TransactionType type, String description) {
+    	User user = userService.getUserById(userId);
+        Customer customer = customerService.getCustomerById(user.getEmail(), customerId);
 
         validateAmount(amount);
         validateType(type);

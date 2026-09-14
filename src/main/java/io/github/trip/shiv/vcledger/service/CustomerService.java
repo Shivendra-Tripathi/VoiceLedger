@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import io.github.trip.shiv.vcledger.business.exceptions.CustomerNotFoundException;
 import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.CustomerRepository;
-import io.github.trip.shiv.vcledger.service.exception.CustomerNotFoundException;
 
 /**
  * Business logic for Customer records.

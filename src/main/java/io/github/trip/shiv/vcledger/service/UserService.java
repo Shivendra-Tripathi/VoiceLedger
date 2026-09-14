@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import io.github.trip.shiv.vcledger.business.exceptions.EmailAlreadyExistsException;
+import io.github.trip.shiv.vcledger.business.exceptions.InvalidPasswordException;
+import io.github.trip.shiv.vcledger.business.exceptions.UserNotFoundException;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.UserRepository;
-import io.github.trip.shiv.vcledger.service.exception.EmailAlreadyExistsException;
-import io.github.trip.shiv.vcledger.service.exception.InvalidPasswordException;
-import io.github.trip.shiv.vcledger.service.exception.UserNotFoundException;
 
 /**
  * Business logic for the shopkeeper/owner (User) entity.

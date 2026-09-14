@@ -7,9 +7,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import io.github.trip.shiv.vcledger.controller.authentication.dto.LoginRequest;
-import io.github.trip.shiv.vcledger.controller.authentication.dto.LoginResponse;
-import io.github.trip.shiv.vcledger.controller.authentication.dto.RegisterRequest;
+import io.github.trip.shiv.vcledger.business.dtos.authcontroller.req.LoginRequest;
+import io.github.trip.shiv.vcledger.business.dtos.authcontroller.req.RegisterRequest;
+import io.github.trip.shiv.vcledger.business.dtos.authcontroller.res.LoginResponse;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.security.JwtService;
 

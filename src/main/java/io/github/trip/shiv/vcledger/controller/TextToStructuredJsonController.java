@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.trip.shiv.vcledger.sarvamai.texttojson.TextToStructuredJsonService;
-import io.github.trip.shiv.vcledger.sarvamai.texttojson.TextToStructuredJsonServiceImpl;
+import io.github.trip.shiv.vcledger.business.sarvamai.impls.TextToStructuredJsonServiceImpl;
+import io.github.trip.shiv.vcledger.business.sarvamai.interfaces.TextToStructuredJsonService;
 import jakarta.validation.Valid;
 
 @RestController

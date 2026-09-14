@@ -1,6 +1,10 @@
 package io.github.trip.shiv.vcledger.entity;
 
 
+import java.math.BigDecimal;
+import java.time.Instant;
+
+import io.github.trip.shiv.vcledger.business.enums.TransactionType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,9 +24,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 /**
  * Represents a single ledger entry belonging to a Customer.
@@ -71,7 +72,7 @@ public class Transaction {
     private String description;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     /**
      * The customer this ledger entry belongs to. LAZY fetch keeps bulk
@@ -85,7 +86,7 @@ public class Transaction {
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) {
-            createdAt = LocalDateTime.now();
+            createdAt = Instant.now();
         }
     }
 }
