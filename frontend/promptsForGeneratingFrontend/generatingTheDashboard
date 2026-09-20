@@ -1,0 +1,150 @@
+I want to design the frontend for my Application(VcLedger).
+
+VcLedger Short Description :
+**VCLedger** is a voice-controlled digital ledger application designed to simplify financial record management for small shopkeepers and local businesses. It allows users to manage customer transactions using natural voice commands instead of relying entirely on manual data entry.
+
+The application uses **Speech-to-Text** technology to convert spoken commands into text and an **LLM-based structured data extraction system** to understand the user's intent and identify details such as customer name, transaction amount, and transaction type. Based on the extracted intent, the backend performs operations such as creating transactions, checking customer balances, viewing transaction history, and managing outstanding payments.
+
+The system is developed using **Java, Spring Boot, Spring Security, JWT authentication, JPA/Hibernate, and MySQL**, with a React-based frontend planned for user interaction. It follows a layered and modular architecture with separate components for authentication, intent processing, business operations, and data persistence.
+
+VCLedger aims to make digital bookkeeping **faster, simpler, and more accessible**, particularly for users who may find traditional accounting applications complex or time-consuming.
+
+
+I have developed the react frontend where the 'Login' and 'Create New Account' is working.
+
+
+Note : The Application is to be used by the SHOPKEEPER to record the TRANSACTIONS happening with CUSTOMERS.
+-----------------------------------------------------------------------------------------------
+
+NOW WHAT I NEED :
+
+I want the frontend for my application.
+
+
+1) VoiceControlledLedgerActionPage:
+    Description of What i Need :
+    1) The UI of the application must be ChatGPT Style.
+    2) At the bottom of the recording page , there must be a "Record Voice" button and a "Send" button , you should use graphical button rather than text based.
+    3) Above the recording & sending section the complete page should be blank , where the visual responses send by the banckend would be visible.
+    4) After the login this page must open to the User.
+    5) There must be sidebars like that of Chatgpt , where there are menu buttons for Customers(like that of Images in Chatgpt).
+    6) On the sidebars there must be a button to create a New Customer.
+
+2) NewCustomerCreationPage :
+    Description of What i Need :
+    1) The user can enter the name of the Customer , image of the Customer (Optional),phone number of the Customer.
+    2) On that page he can create a new Customer.
+
+3) AllCustomersPage : 
+    Description of What i Need :
+    1) All the customers are visible on this page with their name , image, and balance amount(neagtive means CUSTOMER has to pay that amount , positive means that the SHOPKEEPER got the advance payments).
+    2) The Shopkeeper can click a Specific Customer to open that CUSTOMER PAGE where all the Transactions belonging to that CUSTOMER are visible.
+    NOTE : The Customers are visible in chunk of pages i.e about 12 customers per page.
+
+4) CustomerPage :
+    Description of What i Need :
+    1) Customer name , image , phone must be visible at the top.
+    2) There must be a delete button to delete the Customer.
+    3) Below it all the Transactions are visible belonging to that Customers with time on which they happened.
+    
+
+------------------------------------------------------------------------------------------------------------
+
+NOW I WILL DESCRIBE THE REQUEST , RESPONSE MODEL FOR EACH PAGE/REQUEST THAT ARE TO BE MADE WITH BACKEND .
+
+1) NewCustomerCreationPage
+    REST API REQUEST TO BE MADE AT : POST http://localhost:8080/api/customers
+    SAMPLE EXAMPLES :
+        API URL : POST http://localhost:8080/api/customers
+        REQUEST BODY FORMAT : {
+            "name" : "Ajeet Kumar",
+            "phone" : "9564839272"
+            }
+        RESPONSE FORMAT : {
+                "createdAt": "2026-09-15T10:48:11.8077171",
+                "id": 1,
+                "name": "Ajeet Kumar",
+                "phone": "9564839272"
+            }
+    #For now you do not care about the image of the customer, i will implement that in future.
+
+2) AllCustomersPage
+    REST API REQUEST TO BE MADE AT : GET http://localhost:8080/api/customers
+    SAMPLE EXAMPLES :
+        API URL : GET http://localhost:8080/api/customers
+        REQUEST BODY FORMAT : NO BODY
+        RESPONSE FORMAT : {
+            "content": [
+                {
+                    "createdAt": "2026-09-15T10:50:29.649511",
+                    "id": 2,
+                    "name": "Sumit Kumar",
+                    "phone": "9365957483"
+                },
+                {
+                    "createdAt": "2026-09-15T10:48:11.807717",
+                    "id": 1,
+                    "name": "Ajeet Kumar",
+                    "phone": "9564839272"
+                }
+            ],
+            "empty": false,
+            "first": true,
+            "last": true,
+            "number": 0,
+            "numberOfElements": 2,
+            "pageable": {
+                "offset": 0,
+                "pageNumber": 0,
+                "pageSize": 10,
+                "paged": true,
+                "sort": {
+                    "empty": false,
+                    "sorted": true,
+                    "unsorted": false
+                },
+                "unpaged": false
+            },
+            "size": 10,
+            "sort": {
+                "empty": false,
+                "sorted": true,
+                "unsorted": false
+            },
+            "totalElements": 2,
+            "totalPages": 1
+        }
+
+    IMPORTANT : You can use the standard pagination,sorting technique (i.e providing the page and size in query parameter).
+
+3) CustomerPage
+    REST API REQUEST TO BE MADE : GET http://localhost:8080/api/customers/{id}
+    SAMPLE EXAMPLES : 
+        API URL : GET http://localhost:8080/api/customers/2
+        REQUEST BODY FORMAT : NO BODY
+        RESPONSE BODY FORMAT : {
+            "createdAt": "2026-09-15T10:50:29.649511",
+            "id": 2,
+            "name": "Sumit Kumar",
+            "phone": "9365957483"
+        }
+
+4) VoiceControlledLedgerActionPage
+    #It must record the Audio , and then send to the Audio as multipart audio file to the Url below.
+    REST API REQUEST TO BE MADE : POST  http://localhost:8080/api/voicecommand/process
+    #I will handle the response from the above api in future,for now leave the handling of response from above api.
+
+------------------------------------------------------------------------------------------------------------
+IMPORTANT - My login frontend page stores the jwt token , you have to send the jwt token with every rest api request.
+
+------------------------------------------------------------------------------------------------------------
+You are a frontend developer . You are supposed to design the frontend files according to the above information.
+The frontend application must be visually appealing and color ful .
+NOTE :
+    1) PROVIDE COMPLETE DOCUMENTATION OF EACH TASK IN THE CODE
+    2) MAKE EVERYTHING HIGHLY SCALABLE AND MANAGEABLE ,SO I CAN MAINTAIN , UPGRADE THE CODE IN FUTURE(I do not have in depth knowledge of frontend development).
+    3) The Ui must be component driven .
+    4) Use modern, polished skeuomorphism rather than an old-fashioned 2010-style interface. Use subtle depth, layered surfaces, realistic buttons, shadows, tactile controls and slight gradients while maintaining clean modern typography and accessibility.
+    5) Design such that i can easily integrate with my existing login page.
+TECH STACK TO USE :
+    USE REACT JS + TAILWIND CSS

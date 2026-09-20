@@ -9,7 +9,10 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.LedgerOperation;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.LedgerOperation;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.LedgerResponse;
 import io.github.trip.shiv.vcledger.business.exceptions.PendingOperationNotFoundException;
 import io.github.trip.shiv.vcledger.business.factories.LedgerOperationFactory;
@@ -44,7 +47,8 @@ public class PendingOperationService {
     @Transactional
     public PendingOperation create(
             Long shopkeeperId,
-            LedgerOperation operation
+            LedgerOperation operation,
+            PendingOperation.Status status
     ) {
 
         if (shopkeeperId == null) {
@@ -68,6 +72,7 @@ public class PendingOperationService {
         pendingOperation.setOperationId(
                 generateOperationId()
         );
+        pendingOperation.setStatus(status);
 
         pendingOperation.setShopkeeperId(shopkeeperId);
 
@@ -114,6 +119,7 @@ public class PendingOperationService {
     }
 
 
+
     /**
      * Confirms and executes a pending operation.
      *
@@ -130,12 +136,14 @@ public class PendingOperationService {
      * LedgerOperationProcessorService
      *       ↓
      * mark as EXECUTED
+     * @throws JsonProcessingException 
+     * @throws JsonMappingException 
      */
     @Transactional
     public LedgerResponse confirm(
             String operationId,
             Long shopkeeperId
-    ) {
+    ) throws JsonMappingException, JsonProcessingException {
 
         PendingOperation pendingOperation =
                 getByOperationId(
@@ -147,10 +155,17 @@ public class PendingOperationService {
         
         LedgerOperation operation = ledgerOperationFactory.fromPendingOperation(pendingOperation);
 
-        return ledgerOperationExecutorDelegator.delegate(operation);
+        LedgerResponse response =  ledgerOperationExecutorDelegator.delegate(operation);
+        
+        pendingOperation.setExecutedAt(Instant.now());
+        
+        pendingOperation.setStatus(Status.EXECUTED);
+        
+        return response;
     }
 
-
+    
+    
     /**
      * Cancels a pending operation.
      */
@@ -183,7 +198,7 @@ public class PendingOperationService {
      * Finds a pending operation using its public operation ID
      * while also enforcing shopkeeper ownership.
      */
-    private PendingOperation getByOperationId(
+    public  PendingOperation getByOperationId(
             String operationId,
             Long shopkeeperId
     ) {

@@ -1,65 +1,31 @@
 package io.github.trip.shiv.vcledger.business.factories;
 
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.CreateTransactionOperation;
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.DeleteTransactionOperation;
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.LedgerOperation;
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.LedgerOperation;
+import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerOperationDeserializerDelegator;
 import io.github.trip.shiv.vcledger.entity.PendingOperation;
 import lombok.RequiredArgsConstructor;
 
-@Service
+@Component
 @RequiredArgsConstructor
 public class LedgerOperationFactory {
 
-    private final ObjectMapper objectMapper;
+	private final ObjectMapper objectMapper;
+    private final LedgerOperationDeserializerDelegator ledgerOperationDeserializerDelegator; 
+   
+    
+    
 
-    public  LedgerOperation fromPendingOperation(PendingOperation pendingOperation) {
-
-        if (pendingOperation == null) {
-            throw new IllegalArgumentException("Pending operation cannot be null");
-        }
-
-        if (pendingOperation.getOperationType() == null) {
-            throw new IllegalArgumentException("Operation type cannot be null");
-        }
-
-        if (pendingOperation.getPayload() == null
-                || pendingOperation.getPayload().isBlank()) {
-            throw new IllegalArgumentException("Operation payload cannot be empty");
-        }
-
-        try {
-
-            return switch (pendingOperation.getOperationType()) {
-
-                case CREATE_TRANSACTION ->
-                        objectMapper.readValue(
-                                pendingOperation.getPayload(),
-                                CreateTransactionOperation.class
-                        );
-
-                case DELETE_TRANSACTION ->
-                        objectMapper.readValue(
-                                pendingOperation.getPayload(),
-                                DeleteTransactionOperation.class
-                        );
-                default -> 
-                throw new IllegalArgumentException("Unexpected value: " + pendingOperation.getOperationType());
-                        
-                
-            };
-
-        } catch (JsonProcessingException e) {
-
-            throw new IllegalStateException(
-                    "Failed to deserialize pending operation payload",
-                    e
-            );
-        }
+    public  LedgerOperation fromPendingOperation(PendingOperation pendingOperation) throws JsonMappingException, JsonProcessingException {
+    	
+    	JsonNode json = objectMapper.readTree(pendingOperation.getPayload());
+    	return ledgerOperationDeserializerDelegator.delegate(pendingOperation.getIntentKey(), json);
     }
 }

@@ -1,6 +1,6 @@
 package io.github.trip.shiv.vcledger.business.dtos.ledger.req;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,13 +11,12 @@ public class CustomerBalanceQueryRequest implements LedgerQueryRequest{
 	
 	private final String customerName;
 	
+	@JsonIgnore
+	public static final String intentKey = "CUSTOMER_BALANCE";
 	
-	/*
-	 * For Parsing the Json
-	 */
-	public static CustomerBalanceQueryRequest parse(JsonNode json) {
-		String customerName = json.path("customerName").asText();
-		
-		return new CustomerBalanceQueryRequest(customerName);
+	@Override
+	public String getIntentKey() {
+		return intentKey;
 	}
+
 }

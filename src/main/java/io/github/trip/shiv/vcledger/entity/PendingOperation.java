@@ -5,7 +5,6 @@ import java.time.Instant;
 
 import org.springframework.security.core.Transient;
 
-import io.github.trip.shiv.vcledger.business.enums.OperationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -57,6 +56,7 @@ public class PendingOperation {
 	 public enum Status {
 
 		    PENDING,
+		    WAITING_FOR_CUSTOMER_SELECTION,
 
 		    EXECUTED,
 
@@ -101,15 +101,14 @@ public class PendingOperation {
 
 
     /**
-     * What operation is waiting for confirmation.
+     * What operation/intenttype is waiting for confirmation.
      */
-    @Enumerated(EnumType.STRING)
     @Column(
         name = "operation_type",
         nullable = false,
         length = 50
     )
-    private OperationType operationType;
+    private String intentKey;
 
 
     /**

@@ -13,11 +13,13 @@ import lombok.Getter;
 public class CustomerSelectionResponse implements SelectionResponse{
 	
 	
+	private final String operationId;
 	private final String message;
 	private final List<PersonInfo> customers;
 	
-	public CustomerSelectionResponse(String message,List<Customer> customers) {
+	public CustomerSelectionResponse(String operationId,String message,List<Customer> customers) {
 		
+		this.operationId = operationId;
 		this.message = message;
 		this.customers = new ArrayList<PersonInfo>();
 		

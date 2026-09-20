@@ -2,12 +2,10 @@ package io.github.trip.shiv.vcledger.business.dtos.ledger.req;
 
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import io.github.trip.shiv.vcledger.business.dtos.ledger.res.LedgerResponse;
 import io.github.trip.shiv.vcledger.business.enums.MoneyDirection;
 import io.github.trip.shiv.vcledger.business.enums.OperationType;
-import io.github.trip.shiv.vcledger.business.enums.TransactionType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -24,6 +22,9 @@ public class CreateTransactionOperationRequest implements LedgerOperationRequest
 	
 	
 	private  final MoneyDirection moneyDirection;
+	
+	@JsonIgnore
+	public static final String intentKey = "CREATE_TRANSACTION";
 
 	
 	@Override
@@ -33,20 +34,16 @@ public class CreateTransactionOperationRequest implements LedgerOperationRequest
 	}
 
 
-	
-	/*
-	 * Creates the CreateTransactionOperationRequest by parsing the Json
-	 */
-	public static CreateTransactionOperationRequest parse(JsonNode json) {
-		String customerName = json.path("customerName").asText();
-		BigDecimal amount = json.path("amount").decimalValue();
-		TransactionType transactionType = TransactionType.valueOf(json.path("transactionType").asText());
-		
-		return new CreateTransactionOperationRequest(
-				customerName,
-				amount,
-				MoneyDirection.from(transactionType));
+	@Override
+	public String getIntentKey() {
+		return intentKey;
 	}
+
+
+
+
+	
+	
 
 	
 }

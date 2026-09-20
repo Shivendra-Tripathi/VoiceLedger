@@ -5,9 +5,12 @@ import java.time.Instant;
 
 import org.springframework.stereotype.Service;
 
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.CreateTransactionOperation;
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.DeleteTransactionOperation;
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.LedgerOperation;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.CreateTransactionOperation;
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.DeleteTransactionOperation;
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.LedgerOperation;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.ConfirmationResponse;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.DeletionSuccessResponse;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.LedgerResponse;
@@ -35,7 +38,7 @@ public class LedgerResponseFactory {
 	CustomerService customerService;
 	SecurityUtils securityUtils;
 	
-	public LedgerResponse getConfirmationResponse(PendingOperation pendingOperation) {
+	public LedgerResponse getConfirmationResponse(PendingOperation pendingOperation) throws JsonMappingException, JsonProcessingException {
 		
 		LedgerOperation operation = ledgerOperationFactory.fromPendingOperation(pendingOperation);
 		
@@ -63,7 +66,7 @@ public class LedgerResponseFactory {
 				return new TransactionConfirmationResponse(
 						"Confirm the Operation to be done",
 						operationId,
-						operation.getType(),
+						operation.getIntentKey(),
 						new TransactionPreview(
 								PersonInfo.fromShopkeeper(securityUtils.getAuthenticatedUser()),
 								PersonInfo.fromCustomer(customer),
@@ -83,7 +86,7 @@ public class LedgerResponseFactory {
 	 * TO get the TransactionSuccessResponse when certain transaction succeeds
 	 * TO get the DeletionSuccessResponse when certain transaction deletes
 	 */
-	public SuccessResponse getSuccessResponse(PendingOperation pendingOperation) {
+	public SuccessResponse getSuccessResponse(PendingOperation pendingOperation) throws JsonMappingException, JsonProcessingException {
 		
 		
 		

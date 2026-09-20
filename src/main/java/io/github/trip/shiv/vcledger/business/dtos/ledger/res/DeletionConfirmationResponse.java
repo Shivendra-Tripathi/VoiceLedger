@@ -4,7 +4,6 @@ package io.github.trip.shiv.vcledger.business.dtos.ledger.res;
 import java.time.Instant;
 
 import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.OperationPreview;
-import io.github.trip.shiv.vcledger.business.enums.OperationType;
 import io.github.trip.shiv.vcledger.business.enums.ResponseType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -21,7 +20,7 @@ public class DeletionConfirmationResponse implements ConfirmationResponse {
     private String message;
     private String operationId;
     private Instant expiresAt;
-    private OperationType operationType;
+    private String operationType;
 
     private OperationPreview operation;
 
@@ -29,7 +28,7 @@ public class DeletionConfirmationResponse implements ConfirmationResponse {
             String message,
             String operationId,
             Instant expiresAt,
-            OperationType operationType,
+            String operationType,
             OperationPreview operation
     ) {
         this.responseType = ResponseType.CONFIRMATION;

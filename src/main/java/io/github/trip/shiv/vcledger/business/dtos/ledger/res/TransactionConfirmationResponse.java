@@ -1,7 +1,6 @@
 package io.github.trip.shiv.vcledger.business.dtos.ledger.res;
 
 import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.TransactionPreview;
-import io.github.trip.shiv.vcledger.business.enums.OperationType;
 import io.github.trip.shiv.vcledger.business.enums.ResponseType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +18,7 @@ public class TransactionConfirmationResponse implements ConfirmationResponse {
 
     private String operationId;
 
-    private OperationType operationType;
+    private String operationType;
 
     private TransactionPreview transaction;
 

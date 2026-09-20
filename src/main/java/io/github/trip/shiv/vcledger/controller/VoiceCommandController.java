@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -16,8 +18,8 @@ import io.github.trip.shiv.vcledger.business.dtos.ledger.req.LedgerIntentRequest
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.LedgerResponse;
 import io.github.trip.shiv.vcledger.business.exceptions.TranscriptionException;
 import io.github.trip.shiv.vcledger.business.groq.GroqStructuredOutputService;
-import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerIntentRequestParser;
-import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerIntentRequestProcessor;
+import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerIntentRequestExecutorDelegator;
+import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerIntentRequestParserDelegator;
 import io.github.trip.shiv.vcledger.business.sarvamai.impls.SarvamVoiceToTextService;
 import io.github.trip.shiv.vcledger.business.sarvamai.interfaces.VoiceToTextService;
 import io.github.trip.shiv.vcledger.business.utilities.SecurityUtils;
@@ -34,8 +36,8 @@ public class VoiceCommandController {
 	SecurityUtils securityUtils;
 	ObjectMapper objectMapper;
 	GroqStructuredOutputService groqStructuredOutputService;
-	LedgerIntentRequestParser ledgerIntentRequestParser;
-	LedgerIntentRequestProcessor ledgerIntentRequestProcessor;
+	LedgerIntentRequestParserDelegator ledgerIntentRequestParser;
+	LedgerIntentRequestExecutorDelegator ledgerIntentRequestExecutorDelegator;
 	PendingOperationService pendingOperationService;
 	
 	final int AUDIO_FILE_SIZE_MAX = 5;			//MB
@@ -73,19 +75,19 @@ public class VoiceCommandController {
 		JsonNode actionNode = groqStructuredOutputService.extractStructuredJson(transcript);
 		
 
-		LedgerIntentRequest request = ledgerIntentRequestParser.parse(actionNode);
+		LedgerIntentRequest request = ledgerIntentRequestParser.delegate(actionNode);
 		
 		
 		
 		return ResponseEntity.ok(
-				ledgerIntentRequestProcessor.process(request)
+				ledgerIntentRequestExecutorDelegator.delegate(request)
 				);
 		
     }
 	
 	
 	@PostMapping("/confirm")
-	public ResponseEntity<LedgerResponse> confirmOperation(@ RequestParam("operationId") String operationId){
+	public ResponseEntity<LedgerResponse> confirmOperation(@ RequestParam("operationId") String operationId) throws JsonMappingException, JsonProcessingException{
 		User user = securityUtils.getAuthenticatedUser();
 		
 		LedgerResponse ledgerResponse = pendingOperationService.confirm(operationId, user.getId());

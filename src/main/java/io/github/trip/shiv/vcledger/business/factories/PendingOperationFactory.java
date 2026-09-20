@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import io.github.trip.shiv.vcledger.business.dtos.ledger.intent.LedgerOperation;
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.LedgerOperation;
 import io.github.trip.shiv.vcledger.entity.PendingOperation;
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +34,7 @@ public class PendingOperationFactory {
 
         PendingOperation pendingOperation = new PendingOperation();
 
-        pendingOperation.setOperationType(operation.getType());
+        pendingOperation.setIntentKey(operation.getIntentKey());
         pendingOperation.setPayload(payload);
         pendingOperation.setStatus(PendingOperation.Status.PENDING);
 
