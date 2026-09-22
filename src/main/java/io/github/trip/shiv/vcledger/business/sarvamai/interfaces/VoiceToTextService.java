@@ -4,6 +4,8 @@ package io.github.trip.shiv.vcledger.business.sarvamai.interfaces;
 import java.io.File;
 import java.io.IOException;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import io.github.trip.shiv.vcledger.business.exceptions.TranscriptionException;
  
 /**
@@ -30,6 +32,7 @@ public interface VoiceToTextService {
      * @throws TranscriptionException   if the transcription provider returns an error
      */
     String transcribe(File audioFile) throws IOException, TranscriptionException;
+    String transcribe(MultipartFile audioFile) throws IOException, TranscriptionException;
  
     /**
      * Transcribes audio held entirely in memory — no temp file needed.

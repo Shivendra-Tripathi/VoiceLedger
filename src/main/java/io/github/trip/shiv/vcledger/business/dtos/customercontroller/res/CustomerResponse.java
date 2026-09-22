@@ -18,12 +18,14 @@ public class CustomerResponse {
 	Long id;
 	String name;
 	String phone;
+	String imageUrl;
 	LocalDateTime createdAt;
 	
 	public CustomerResponse(Customer customer) {
 		id = customer.getId();
 		name = customer.getName();
 		phone = customer.getPhone();
+		this.imageUrl = customer.getPhotoUrl();
 		createdAt = customer.getCreatedAt();
 	}
 }

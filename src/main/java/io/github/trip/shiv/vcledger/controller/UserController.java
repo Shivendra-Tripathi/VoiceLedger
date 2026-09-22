@@ -59,7 +59,7 @@ public class UserController {
     @PutMapping("/me")
     public ResponseEntity<UpdateUserResponse> updateCurrentUser(@RequestBody UpdateUserRequest request) {
         User user = utils.getAuthenticatedUser();
-        userService.updateUser(user.getEmail(), request.getName(), request.getEmail());
+        userService.updateUser(user.getId(), request.getName(), request.getEmail());
         UpdateUserResponse response = new UpdateUserResponse("User updated");
         return ResponseEntity.ok(response);
         
@@ -74,7 +74,7 @@ public class UserController {
     public ResponseEntity<UpdatePasswordResponse> updatePassword(@RequestBody UpdatePasswordRequest request,
                                                     Authentication authentication) {
     	User user = utils.getAuthenticatedUser();
-        userService.changePassword(user.getEmail(), request.getCurrentPassword(), request.getNewPassword());
+        userService.changePassword(user.getId(), request.getCurrentPassword(), request.getNewPassword());
         UpdatePasswordResponse response = new UpdatePasswordResponse("User's Password updated");
         return ResponseEntity.ok(response);
     }

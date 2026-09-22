@@ -12,6 +12,11 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
 import io.github.trip.shiv.vcledger.business.exceptions.TranscriptionException;
 import io.github.trip.shiv.vcledger.business.sarvamai.interfaces.VoiceToTextService;
  
@@ -31,11 +36,13 @@ import io.github.trip.shiv.vcledger.business.sarvamai.interfaces.VoiceToTextServ
  * With language / mode hints:
  *   VoiceToTextService service = new SarvamVoiceToTextService(apiKey, "hi-IN", "transcribe");
  */
+@Service
 public class SarvamVoiceToTextService implements VoiceToTextService {
  
     private static final String ENDPOINT = "https://api.sarvam.ai/speech-to-text";
     private static final String DEFAULT_MODEL = "saaras:v3";
- 
+    
+    
     /**
      * Explicit extension -> MIME type map for Sarvam's allowed content types.
      * Needed because Java's URLConnection.guessContentTypeFromName() gets some
@@ -61,20 +68,23 @@ public class SarvamVoiceToTextService implements VoiceToTextService {
             Map.entry("pcm", "audio/pcm_s16le")
     );
  
-    private final String apiKey;
+   
+    @Value("${sarvam-api-key}")
+    private  String sarvamApiKey ;
+    
+    final int AUDIO_FILE_SIZE_MAX = 2;			//MB
+    
     private final String languageCode; // e.g. "hi-IN", "en-IN", or "unknown" for auto-detect
     private final String mode;         // transcribe | translate | verbatim | translit | codemix
     private final HttpClient httpClient;
  
-    public SarvamVoiceToTextService(String apiKey) {
-        this(apiKey, "unknown", "transcribe");
+    @Autowired
+    public SarvamVoiceToTextService() {
+        this("unknown", "translate");
     }
  
-    public SarvamVoiceToTextService(String apiKey, String languageCode, String mode) {
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalArgumentException("apiKey must not be null or blank");
-        }
-        this.apiKey = apiKey;
+    public SarvamVoiceToTextService(String languageCode, String mode) {
+       
         this.languageCode = languageCode;
         this.mode = mode;
         this.httpClient = HttpClient.newBuilder()
@@ -109,7 +119,7 @@ public class SarvamVoiceToTextService implements VoiceToTextService {
  
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(ENDPOINT))
-                    .header("api-subscription-key", apiKey)
+                    .header("api-subscription-key", sarvamApiKey)
                     .header("Content-Type", "multipart/form-data; boundary=" + bodyBuilder.getBoundary())
                     .timeout(Duration.ofSeconds(60))
                     .POST(bodyBuilder.build())
@@ -166,4 +176,42 @@ public class SarvamVoiceToTextService implements VoiceToTextService {
                 .replace("\\\"", "\"")
                 .replace("\\\\", "\\");
     }
+    
+    
+    
+    
+    
+    /*
+	 * Transcribe the Audio
+	 */
+    @Override
+	public String transcribe(MultipartFile audio) {
+		
+		String transcript ;
+		
+		//Transcribe the Audio 
+		if (audio.getSize() > AUDIO_FILE_SIZE_MAX * 1024 * 1024) {
+		    throw new RuntimeException("Audio file cannot exceed 5 MB");
+		}
+		
+        if (audio == null || audio.isEmpty()) {
+        	throw new RuntimeException("NO AUDIO FILE UPLOADED.....");
+        }
+ 
+        try {
+            byte[] audioBytes = audio.getBytes();
+            String filename = audio.getOriginalFilename() != null ? audio.getOriginalFilename() : "audio";
+ 
+           
+            transcript = this.transcribe(audioBytes, filename);
+ 
+        } catch (TranscriptionException e) {
+            throw new RuntimeException("PROBLEM OCCURRED WHILE TRANSCRIPTING THE AUDIO", e);
+        } catch (IOException e) {
+        	throw new RuntimeException("PROBLEM OCCURRED WHILE TRANSCRIPTING THE AUDIO", e);
+        }
+        
+        return transcript;
+	}
+	
 }

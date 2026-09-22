@@ -26,7 +26,7 @@ public class PersonInfo {
     			new PersonInfo(
     					customer.getId(),
     					customer.getName(),
-    					null,
+    					customer.getPhotoUrl(),
     					PersonType.CUSTOMER);
     	return personInfo;
     }
@@ -36,7 +36,7 @@ public class PersonInfo {
     			new PersonInfo(
     					user.getId(),
     					user.getName(),
-    					null,
+    					user.getPhotoUrl(),
     					PersonType.SHOPKEEPER);
     	return personInfo;
     }

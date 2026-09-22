@@ -40,7 +40,7 @@ public class AuthService {
             throw new RuntimeException("Email already registered");
         }
 
-        return userService.createUser(request.getUsername(), request.getEmail(), request.getPassword());
+        return userService.createUser(request.getUsername(), request.getEmail(), request.getPassword(),null);
     }
 
     /**

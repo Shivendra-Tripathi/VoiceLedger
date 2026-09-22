@@ -14,7 +14,6 @@ import io.github.trip.shiv.vcledger.business.exceptions.InvalidTransactionExcept
 import io.github.trip.shiv.vcledger.business.exceptions.TransactionNotFoundException;
 import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.Transaction;
-import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.TransactionRepository;
 
 /**
@@ -55,59 +54,22 @@ import io.github.trip.shiv.vcledger.repository.TransactionRepository;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
-    private final UserService userService;
     private final CustomerService customerService;
 
     public TransactionService(TransactionRepository transactionRepository,
-                                UserService userService,
                                 CustomerService customerService) {
         this.transactionRepository = transactionRepository;
-        this.userService = userService;
         this.customerService = customerService;
     }
 
-    /**
-     * Create a ledger transaction for a customer owned by the authenticated user.
-     *
-     * Ownership is enforced by resolving the customer through
-     * CustomerService#getCustomerById, which throws CustomerNotFoundException
-     * if the customer doesn't exist or belongs to a different user — so a
-     * transaction can never be created against another user's customer.
-     *
-     * type semantics follow the entity's own documentation: CREDIT
-     * increases what the customer owes, DEBIT decreases it (a payment).
-     *
-     * @param currentUserEmail the authenticated user's email
-     * @param customerId        the customer this entry belongs to
-     * @param amount            must be non-null and > 0
-     * @param type              CREDIT or DEBIT
-     * @param description       optional free-text note
-     * @throws InvalidTransactionException if amount or type fail validation
-     */
-    @Transactional
-    public Transaction createTransaction(String currentUserEmail, Long customerId,
-                                          BigDecimal amount, TransactionType type, String description) {
-        Customer customer = customerService.getCustomerById(currentUserEmail, customerId);
-
-        validateAmount(amount);
-        validateType(type);
-
-        Transaction transaction = Transaction.builder()
-                .amount(amount)
-                .type(type)
-                .description(description)
-                .customer(customer)
-                .build();
-
-        return transactionRepository.save(transaction);
-    }
+    
     
     
     @Transactional
     public Transaction createTransaction(Long userId, Long customerId,
                                           BigDecimal amount, TransactionType type, String description) {
-    	User user = userService.getUserById(userId);
-        Customer customer = customerService.getCustomerById(user.getEmail(), customerId);
+    	
+        Customer customer = customerService.getCustomerById(userId, customerId);
 
         validateAmount(amount);
         validateType(type);
@@ -129,8 +91,7 @@ public class TransactionService {
      * @throws TransactionNotFoundException if no such transaction exists for this user
      */
     @Transactional(readOnly = true)
-    public Transaction getTransactionById(String currentUserEmail, Long transactionId) {
-        Long userId = userService.getUserByEmail(currentUserEmail).getId();
+    public Transaction getTransactionById(Long userId, Long transactionId) {
         return transactionRepository.findByIdAndCustomer_UserId(transactionId, userId)
                 .orElseThrow(() -> new TransactionNotFoundException(
                         "Transaction not found with id: " + transactionId));
@@ -142,15 +103,13 @@ public class TransactionService {
      * transactionRepository.findAll().
      */
     @Transactional(readOnly = true)
-    public List<Transaction> getAllTransactions(String currentUserEmail) {
-        Long userId = userService.getUserByEmail(currentUserEmail).getId();
+    public List<Transaction> getAllTransactions(Long userId) {
         return transactionRepository.findByCustomer_UserIdOrderByCreatedAtDesc(userId);
     }
     
     
     @Transactional(readOnly = true)
-    public Page<Transaction> getTransactions(String currentUserEmail,Pageable pageable){
-    	Long userId = userService.getUserByEmail(currentUserEmail).getId();
+    public Page<Transaction> getTransactions(Long userId,Pageable pageable){
     	return transactionRepository.findByCustomer_UserIdOrderByCreatedAtDesc(userId, pageable);
     }
 
@@ -161,16 +120,16 @@ public class TransactionService {
      * never leaks its history.
      */
     @Transactional(readOnly = true)
-    public List<Transaction> getCustomerTransactions(String currentUserEmail, Long customerId) {
-        customerService.getCustomerById(currentUserEmail, customerId); // ownership check; result unused
+    public List<Transaction> getCustomerTransactions(Long userId, Long customerId) {
+        customerService.getCustomerById(userId, customerId); // ownership check; result unused
         return transactionRepository.findByCustomer_IdOrderByCreatedAtDesc(customerId);
     }
     
     
     
     @Transactional(readOnly = true)
-    public Page<Transaction> getCustomerTransactions(String currentUserEmail, Long customerId, Pageable pageable) {
-        customerService.getCustomerById(currentUserEmail, customerId); // ownership check; result unused
+    public Page<Transaction> getCustomerTransactions(Long userId, Long customerId, Pageable pageable) {
+        customerService.getCustomerById(userId, customerId); // ownership check; result unused
         return transactionRepository.findByCustomer_IdOrderByCreatedAtDesc(customerId,pageable);
     }
 
@@ -188,9 +147,9 @@ public class TransactionService {
      * @throws InvalidTransactionException  if a supplied amount is <= 0
      */
     @Transactional
-    public Transaction updateTransaction(String currentUserEmail, Long transactionId,
+    public Transaction updateTransaction(Long userId, Long transactionId,
                                           BigDecimal newAmount, TransactionType newType, String newDescription) {
-        Long userId = userService.getUserByEmail(currentUserEmail).getId();
+     
         Transaction transaction = transactionRepository.findByIdAndCustomer_UserId(transactionId, userId)
                 .orElseThrow(() -> new TransactionNotFoundException(
                         "Transaction not found with id: " + transactionId));
@@ -216,8 +175,7 @@ public class TransactionService {
      * @throws TransactionNotFoundException if the transaction doesn't exist or isn't owned by this user
      */
     @Transactional
-    public void deleteTransaction(String currentUserEmail, Long transactionId) {
-        Long userId = userService.getUserByEmail(currentUserEmail).getId();
+    public void deleteTransaction(Long userId, Long transactionId) {
         Transaction transaction = transactionRepository.findByIdAndCustomer_UserId(transactionId, userId)
                 .orElseThrow(() -> new TransactionNotFoundException(
                         "Transaction not found with id: " + transactionId));
@@ -234,8 +192,8 @@ public class TransactionService {
      * aggregation query runs.
      */
     @Transactional(readOnly = true)
-    public BigDecimal getCustomerBalance(String currentUserEmail, Long customerId) {
-        customerService.getCustomerById(currentUserEmail, customerId); // ownership check; result unused
+    public BigDecimal getCustomerBalance(Long userId, Long customerId) {
+        customerService.getCustomerById(userId, customerId); // ownership check; result unused
         return transactionRepository.calculateBalanceByCustomerId(customerId);
     }
 

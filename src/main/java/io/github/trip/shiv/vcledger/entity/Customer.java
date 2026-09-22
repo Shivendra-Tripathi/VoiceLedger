@@ -59,6 +59,15 @@ public class Customer {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+    
+    
+    /** Public HTTPS URL of the customer's profile photo on Cloudinary (for display). */
+    @Column(name = "photo_url")
+    private String photoUrl;
+ 
+    /** Cloudinary's identifier for the photo asset (needed to delete/replace it -- NOT the URL). */
+    @Column(name = "photo_public_id")
+    private String photoPublicId;
 
     /**
      * The shopkeeper who owns this customer's ledger entry.
@@ -68,6 +77,9 @@ public class Customer {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+    
+    
+    
 
     /**
      * Full transaction history for this customer. Cascade ALL + orphan

@@ -1,7 +1,6 @@
 package io.github.trip.shiv.vcledger.business.factories;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 import org.springframework.stereotype.Component;
 

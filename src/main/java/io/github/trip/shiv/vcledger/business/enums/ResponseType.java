@@ -7,5 +7,6 @@ public enum ResponseType {
     SUCCESS,
     FAILURE,
     SELECTION,
-    INFORMATION
+    INFORMATION,
+    CUSTOMER_BALANCE_INFORMATION
 }

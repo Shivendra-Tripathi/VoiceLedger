@@ -12,4 +12,5 @@ import lombok.Setter;
 public class CreateCustomerRequest {
 	private String name;
 	private String phone;
+	
 }

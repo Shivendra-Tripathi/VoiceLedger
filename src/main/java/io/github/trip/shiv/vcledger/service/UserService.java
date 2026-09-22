@@ -5,12 +5,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.trip.shiv.vcledger.business.exceptions.EmailAlreadyExistsException;
 import io.github.trip.shiv.vcledger.business.exceptions.InvalidPasswordException;
 import io.github.trip.shiv.vcledger.business.exceptions.UserNotFoundException;
+import io.github.trip.shiv.vcledger.business.imagestorage.CloudinaryUploadResult;
+import io.github.trip.shiv.vcledger.business.imagestorage.ImageStorageService;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Business logic for the shopkeeper/owner (User) entity.
@@ -39,15 +43,15 @@ import io.github.trip.shiv.vcledger.repository.UserRepository;
  * fails on the unique constraint.
  */
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    
+    private final ImageStorageService imageStorageService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+ 
 
     /**
      * Retrieve the currently authenticated user.
@@ -107,8 +111,8 @@ public class UserService {
      * @throws EmailAlreadyExistsException if newEmail is already taken by another user
      */
     @Transactional
-    public User updateUser(String currentEmail, String newName, String newEmail) {
-        User user = getUserByEmail(currentEmail);
+    public User updateUser(Long userId, String newName, String newEmail) {
+        User user = getUserById(userId);
 
         if (StringUtils.hasText(newName)) {
             user.setName(newName);
@@ -137,8 +141,8 @@ public class UserService {
      * @throws InvalidPasswordException if oldPassword does not match the stored password
      */
     @Transactional
-    public void changePassword(String email, String oldPassword, String newPassword) {
-        User user = getUserByEmail(email);
+    public void changePassword(Long userId, String oldPassword, String newPassword) {
+        User user = getUserById(userId);
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
             throw new InvalidPasswordException("Old password is incorrect");
@@ -172,18 +176,27 @@ public class UserService {
      * @throws EmailAlreadyExistsException if email is already taken
      */
     @Transactional
-    public User createUser(String name, String email, String rawPassword) {
+    public User createUser(String name, String email, String rawPassword, MultipartFile photoImage) {
         if (userRepository.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Email already in use: " + email);
         }
-
+        
         User user = User.builder()
                 .name(name)
                 .email(email)
                 .password(passwordEncoder.encode(rawPassword))
                 .build();
-
-        return userRepository.save(user);
+        
+        user = userRepository.save(user);
+        
+        if(photoImage != null) {
+	        //Save the image at the Cloudinary
+	        CloudinaryUploadResult result = imageStorageService.uploadImage(photoImage, "user"+user.getId());
+	        
+	        user.setPhotoPublicId(result.getPublicId());
+	        user.setPhotoUrl(result.getSecureUrl());
+        }
+        return user;
     }
 
     /**

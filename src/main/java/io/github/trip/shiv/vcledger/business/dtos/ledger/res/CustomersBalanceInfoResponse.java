@@ -11,18 +11,19 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class CustomersBalanceInfoResponse implements InfoResponse {
 
   
     private String message;
 
     private List<CustomerBalanceData> customers;
+    
 
 	@Override
 	public ResponseType getResponseType() {
 		// TODO Auto-generated method stub
-		return ResponseType.INFORMATION;
+		return ResponseType.CUSTOMER_BALANCE_INFORMATION;
 	}
 }

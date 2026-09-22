@@ -1,0 +1,258 @@
+# VCLedger Design System
+
+A reference for designing any new screen or component so it looks like
+part of the same product. The concept: **a shopkeeper's cloth-bound
+ledger book (bahi-khata)** — maroon cover with brass fittings, cream
+paper pages, ink-stamped headings. Every decision below serves that idea;
+when in doubt, ask "would this exist on a physical ledger book?"
+
+All of this is implemented in `tailwind.config.js` and `src/index.css` —
+this document explains what's there and why, so you extend it instead of
+inventing a second, inconsistent style.
+
+---
+
+## 1. Color
+
+Defined in `tailwind.config.js` under `theme.extend.colors`. Use the
+Tailwind class names (`bg-maroon`, `text-debit`, etc.) — never hardcode
+these hex values in a component.
+
+| Token | Hex | Tailwind classes | Use for |
+|---|---|---|---|
+| Paper | `#F6ECD9` | `bg-paper` | Page background |
+| Paper card | `#FFFBF0` | `bg-paper-card` | Cards, inputs, any raised surface |
+| Paper line | `#E4D3AE` | `border-paper-line` | Borders, dividers, ruled lines |
+| Maroon | `#7A2E2E` | `bg-maroon`, `text-maroon` | Sidebar, primary dark surfaces |
+| Maroon dark | `#551F1F` | `bg-maroon-dark` | Maroon gradients/hover, active nav |
+| Maroon light | `#9A4444` | `bg-maroon-light` | Maroon gradients (top of raised surfaces) |
+| Brass | `#C9962C` | `bg-brass`, `border-brass` | Primary buttons, accents, focus ring |
+| Brass light | `#E3B655` | `bg-brass-light` | Top of brass gradients |
+| Brass dark | `#9C7420` | `text-brass-dark` | Brass gradient shadow edge, small icons |
+| Ink | `#2B241C` | `text-ink` | Primary text |
+| Ink soft | `#6B5D48` | `text-ink-soft` | Secondary text, captions, labels |
+| Credit (teal) | `#1F6F6B` | `text-credit`, `bg-credit-soft` | Positive balances, success states |
+| Debit (rust) | `#B3401A` | `text-debit`, `bg-debit-soft` | Negative balances, errors, record button, destructive actions |
+
+**Rules:**
+- Every screen sits on `bg-paper`. Content sits on `bg-paper-card`.
+- Brass = primary action. Maroon = navigation / dark chrome. Never use
+  both as a primary button color on the same screen — brass is the one
+  "make this happen" color.
+- Credit/debit are reserved for money and status (positive/negative,
+  success/error). Don't reuse them as decorative accents.
+- Don't introduce a new hue without a reason tied to the ledger concept
+  (e.g. don't add a blue "info" color — reframe the message in ink/brass
+  instead).
+
+---
+
+## 2. Typography
+
+```css
+font-family:
+  display: 'Fraunces', serif   /* headings — the "stamped" feel */
+  body:    'Manrope', sans-serif /* everything else */
+```
+
+Loaded via Google Fonts in `index.html`. Tailwind classes: `font-display`,
+`font-body` (body is default, so most text doesn't need the class).
+
+| Role | Classes | Example |
+|---|---|---|
+| Page title | `font-display text-xl font-semibold text-ink` | "New Customer" |
+| Card/section title | `font-display text-lg font-semibold text-ink` | "Ledger entry" |
+| Body text | `font-body text-sm text-ink` (default) | Paragraphs, list items |
+| Secondary/caption | `font-body text-xs text-ink-soft` | Timestamps, hints |
+| Button label | `font-body font-semibold text-sm` | — |
+
+**Rules:**
+- Fraunces is for headings only — never body copy or button labels, it
+  gets illegible at small sizes/long runs.
+- No uppercase tracked-out labels, no letter-spacing tricks. Sentence
+  case everywhere (matches the frontend-design guidance this project
+  follows).
+- Keep line length reasonable — form/card content maxes out around
+  `max-w-lg` to `max-w-2xl`.
+
+---
+
+## 3. Surfaces (the skeuomorphic core)
+
+Two reusable utility classes in `src/index.css`, used instead of
+composing shadow/border/radius by hand:
+
+```css
+.surface-card    /* bg-paper-card, border-paper-line, rounded-2xl, shadow-raised */
+.surface-pressed /* bg-paper-card, border-paper-line, rounded-xl, shadow-pressed */
+```
+
+- **`surface-card`** — anything that reads as a physical card sitting on
+  the page: content cards, customer tiles, the auth card. Corners are
+  `rounded-2xl` (16px).
+- **`surface-pressed`** — anything that reads as *inset into* the page:
+  text inputs, tab switchers, disabled/secondary zones. Corners are
+  `rounded-xl` (12px).
+
+### Shadow tokens (`tailwind.config.js` → `boxShadow`)
+
+| Token | Use |
+|---|---|
+| `shadow-raised` | Cards (`surface-card`) — bigger, softer lift |
+| `shadow-raised-sm` | Buttons, small raised elements — tighter lift |
+| `shadow-pressed` | Inset surfaces (`surface-pressed`), and a button's own `:active` state |
+| `shadow-brassRing` | Rarely used directly; focus rings prefer the brass `:focus-visible` outline in `index.css` |
+
+**The physical-button pattern**, used by every button in the app: raised
+by default, and on `:active` it switches to `shadow-pressed` + nudges
+down 1px (`active:translate-y-px`) — it should feel like it's actually
+being pushed in. Reuse this exact pattern for any new clickable surface.
+
+### Dividers
+
+`.brass-divider` — a thin gradient line (transparent → brass → transparent),
+used as a single ornamental rule (top of the auth card, under a customer
+card's name). Use sparingly — one per card at most; it's a flourish, not
+a general-purpose `<hr>`.
+
+---
+
+## 4. Buttons
+
+`src/components/common/Button.jsx` is the canonical button — reuse it
+rather than writing new button markup. Four variants:
+
+| Variant | Look | Use for |
+|---|---|---|
+| `brass` (default) | Brass gradient, maroon-dark text | Primary actions: Save, Create, Send |
+| `maroon` | Maroon gradient, cream text | Actions inside dark/maroon surfaces |
+| `ghost` | Transparent, soft ink text | Cancel, secondary/tertiary actions |
+| `danger` | Rust gradient, cream text | Delete, destructive actions |
+
+Every variant shares: `rounded-xl`, `px-4 py-2.5`, `font-semibold text-sm`,
+the raised→pressed active-state pattern, `disabled:opacity-50`. Pass an
+`icon` prop (a `lucide-react` component) rather than inlining an `<svg>`.
+
+The plain-CSS auth forms (`Login.jsx`/`Register.jsx`) use `.ledger-button`
+/ `.ledger-button--ghost` in `index.css` instead, which are the same
+visual recipe hand-written for non-JSX-prop contexts. If you add more
+plain-HTML forms outside the React component tree, follow that same
+pattern rather than the `Button.jsx` component.
+
+---
+
+## 5. Form fields
+
+Pattern used in `NewCustomerPage.jsx` and mirrored by `.ledger-field` in
+`index.css`:
+
+```jsx
+<label className="block text-sm font-semibold text-ink mb-1.5">Label</label>
+<input className="w-full rounded-xl surface-pressed px-4 py-3 font-body text-sm text-ink placeholder:text-ink-soft/50 outline-none" />
+```
+
+- Inputs are **pressed/inset**, never raised — they read as a slot cut
+  into the page, distinct from raised buttons/cards.
+- Error state: a `text-debit` message beneath the field, and (per
+  `.ledger-field__input--error`) a `ring-2 ring-debit/50` on the input
+  itself. Don't change the input's fill color for errors — ring + message
+  is enough.
+- Label always sits above the input, `text-sm font-semibold text-ink`.
+
+---
+
+## 6. Avatars / photo slots
+
+`src/components/common/Avatar.jsx`: shows the photo when one exists;
+otherwise a brass-rimmed initials medallion on a maroon gradient. Sizes:
+`sm` (36px, lists), `md` (56px, default), `lg` (80px, headers/profile).
+
+Any future "no photo yet" state (not just people) should follow this
+same idea — a branded placeholder that still feels designed, not a grey
+box or a generic icon.
+
+---
+
+## 7. Iconography
+
+[`lucide-react`](https://lucide.dev), used throughout. Conventions:
+
+- Stroke width `2.25` for small UI icons (buttons, nav), default (`2`)
+  or `1.5–1.75` for larger decorative icons (empty states).
+- Sizes: `13–14px` inline with text/labels, `16–18px` in buttons and nav,
+  `24–32px` for empty-state / large decorative icons.
+- Icons are functional, not decorative filler — every icon in the app
+  reinforces meaning (mic = record, book = ledger entry, phone = contact
+  info). Don't add an icon to a label just to fill space.
+
+---
+
+## 8. Motion
+
+Two custom keyframes in `tailwind.config.js`:
+
+- `animate-pulseRing` — the expanding ring behind the Record button while
+  live. Reserve pulse/ring effects for genuinely live/active states, not
+  decoration.
+- `animate-stamp` — a quick scale-in (0.18s) used when a new chat message
+  appears, like a stamp landing on the page. Use for content that
+  "arrives" into the ledger (new entries, confirmations) — not for
+  routine hovers or page transitions.
+
+Standard transitions elsewhere are short and functional:
+`transition-all duration-150` on buttons, `transition-colors` on nav
+links. Nothing animates on page load; motion always responds to a
+person's action (per the project's frontend-design guidance). Reduced
+motion is respected globally via the `prefers-reduced-motion` block in
+`index.css` — don't bypass it with inline animations.
+
+---
+
+## 9. Layout conventions
+
+- App shell: dark maroon `Sidebar` (fixed width `w-72`) + light content
+  area, exactly like `AppShell.jsx`. Any new top-level page goes inside
+  this shell unless it's a full-bleed take-over (like the auth pages,
+  which intentionally stand alone).
+- Content max-widths: forms/detail pages `max-w-lg`–`max-w-2xl`; grids
+  `max-w-5xl`. Always centered with `mx-auto` and horizontal padding
+  `px-4 sm:px-8`.
+- Grid cards (customer directory, and any future browsable list):
+  `grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4`.
+- Mobile: sidebar becomes an off-canvas drawer behind a hamburger topbar
+  (see `AppShell.jsx`) — don't design a new page that assumes the
+  sidebar is always visible.
+
+---
+
+## 10. Empty, loading, and error states
+
+Don't write ad hoc "no data" messages — reuse:
+
+- `PageLoader` — full-area loading state (ledger book-mark icon, pulsing).
+- `EmptyState` — icon + title + description + optional action button.
+  `tone="error"` swaps the accent from brass to rust for genuine errors.
+
+Copy tone for both: plain, direct, in the ledger's voice — e.g. "No
+customers yet" / "Add your first customer to start recording
+transactions," not "Oops! Nothing to see here 👀".
+
+---
+
+## 11. Quick-reference: building a new component
+
+1. Wrap the outer surface in `surface-card` (raised) or `surface-pressed`
+   (inset) rather than writing your own shadow/border/radius.
+2. Headings → `font-display font-semibold text-ink`. Body → default
+   `font-body text-ink` / `text-ink-soft` for secondary text.
+3. Primary action → `<Button variant="brass">`. Destructive → `variant="danger"`.
+   Never invent a fifth button color.
+4. Icons from `lucide-react` only, sized per section 7.
+5. Money: green/teal (`text-credit`) for positive, rust (`text-debit`)
+   for negative — always paired with a plain-language label ("owes" /
+   "advance paid"), not just color, for accessibility.
+6. If it needs an empty/loading/error state, reuse `EmptyState` /
+   `PageLoader` rather than writing new markup.
+7. Before shipping, check: does this still look like a ledger book, or
+   did it drift toward a generic SaaS card? If the latter — swap the flat
+   shadow/border for the raised/pressed pattern and re-check.

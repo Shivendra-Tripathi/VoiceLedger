@@ -14,6 +14,7 @@ public class CustomerBalanceQueryRequest implements LedgerQueryRequest{
 	@JsonIgnore
 	public static final String intentKey = "CUSTOMER_BALANCE";
 	
+	
 	@Override
 	public String getIntentKey() {
 		return intentKey;

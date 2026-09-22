@@ -45,7 +45,7 @@ public class CreateTransactionOperationExecutor implements LedgerOperationExecut
 		
 		User user = securityUtils.getAuthenticatedUser();
 		Customer customer = customerService.getCustomerById(
-				user.getEmail(), 
+				user.getId(), 
 				createOperation.getCustomerId());
 		
 		Transaction transaction = transactionService.createTransaction(
@@ -56,6 +56,8 @@ public class CreateTransactionOperationExecutor implements LedgerOperationExecut
 				"");
 		
 		
+		
+		System.out.println("Inside the CreateTransactionExecutor's execute method");
 		return new TransactionSuccessResponse(
 				"Transaction Done",
 				new TransactionData(

@@ -9,11 +9,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import io.github.trip.shiv.vcledger.business.dtos.projections.CustomerBalanceProjection;
 import io.github.trip.shiv.vcledger.business.exceptions.CustomerNotFoundException;
+import io.github.trip.shiv.vcledger.business.imagestorage.CloudinaryUploadResult;
+import io.github.trip.shiv.vcledger.business.imagestorage.ImageStorageService;
 import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.CustomerRepository;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Business logic for Customer records.
@@ -36,16 +41,14 @@ import io.github.trip.shiv.vcledger.repository.CustomerRepository;
  * pass authentication.getName().
  */
 @Service
+@RequiredArgsConstructor
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final UserService userService;
-
-    public CustomerService(CustomerRepository customerRepository, UserService userService) {
-        this.customerRepository = customerRepository;
-        this.userService = userService;
-    }
-
+    
+    private final ImageStorageService imageStorageService;
+   
     /**
      * Create a customer owned by the authenticated user.
      *
@@ -59,16 +62,27 @@ public class CustomerService {
      * @param phone             the customer's phone number (nullable, per entity)
      */
     @Transactional
-    public Customer createCustomer(String currentUserEmail, String name, String phone) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-
+    public Customer createCustomer(Long userId, String name, String phone, MultipartFile photoFile) {
+        
+    	User owner = userService.getUserById(userId);
+    	
+    	
         Customer customer = Customer.builder()
                 .name(name)
                 .phone(phone)
                 .user(owner)
                 .build();
+        
+        customer =  customerRepository.save(customer);
 
-        return customerRepository.save(customer);
+        if(photoFile != null) {
+	        //Upload the image to cloudinary
+	        CloudinaryUploadResult result =  imageStorageService.uploadImage(photoFile, "cust"+customer.getId());
+	        
+	        customer.setPhotoPublicId(result.getPublicId());
+	        customer.setPhotoUrl(result.getSecureUrl());
+        }
+        return customer;
     }
 
     /**
@@ -76,16 +90,15 @@ public class CustomerService {
      * Never falls back to customerRepository.findAll().
      */
     @Transactional(readOnly = true)
-    public List<Customer> getAllCustomers(String currentUserEmail) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        return customerRepository.findByUser_Id(owner.getId());
+    public List<Customer> getAllCustomers(Long userId) {
+        return customerRepository.findByUser_Id(userId);  
     }
     
     
     @Transactional(readOnly = true)
-    public Page<Customer> getCustomers(String currentUserEmail,Pageable pageable) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        return customerRepository.findByUser_Id(owner.getId(),pageable);
+    public Page<Customer> getCustomers(Long userId,Pageable pageable) {
+        return customerRepository.findByUser_Id(userId,pageable);
+        
     }
 
     /**
@@ -95,10 +108,10 @@ public class CustomerService {
      *         (including the case where the id exists but belongs to someone else)
      */
     @Transactional(readOnly = true)
-    public Customer getCustomerById(String currentUserEmail, Long customerId) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        return getCustomerOwnedByUser(owner.getId(), customerId);
+    public Customer getCustomerById(Long userId, Long customerId) {
+        return getCustomerOwnedByUser(userId, customerId);
     }
+    
 
     /**
      * Update an existing customer's editable fields.
@@ -113,9 +126,9 @@ public class CustomerService {
      * @throws CustomerNotFoundException if the customer doesn't exist or isn't owned by this user
      */
     @Transactional
-    public Customer updateCustomer(String currentUserEmail, Long customerId, String newName, String newPhone) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        Customer customer = getCustomerOwnedByUser(owner.getId(), customerId);
+    public Customer updateCustomer(Long userId, Long customerId, String newName, String newPhone) {
+   
+        Customer customer = getCustomerOwnedByUser(userId, customerId);
 
         if (StringUtils.hasText(newName)) {
             customer.setName(newName);
@@ -133,9 +146,8 @@ public class CustomerService {
      * @throws CustomerNotFoundException if the customer doesn't exist or isn't owned by this user
      */
     @Transactional
-    public void deleteCustomer(String currentUserEmail, Long customerId) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        Customer customer = getCustomerOwnedByUser(owner.getId(), customerId);
+    public void deleteCustomer(Long userId, Long customerId) {
+        Customer customer = getCustomerOwnedByUser(userId, customerId);
         customerRepository.delete(customer);
     }
 
@@ -145,22 +157,19 @@ public class CustomerService {
      * method — no new query logic needed.
      */
     @Transactional(readOnly = true)
-    public List<Customer> searchCustomers(String currentUserEmail, String namePart) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        return customerRepository.findByUser_IdAndNameContainingIgnoreCase(owner.getId(), namePart);
+    public List<Customer> searchCustomers(Long userId, String namePart) {
+        return customerRepository.findByUser_IdAndNameContainingIgnoreCase(userId, namePart);
     }
     
     @Transactional(readOnly = true)
-    public Page<Customer> searchCustomers(String currentUserEmail, String namePart,Pageable pageable) {
-        User owner = userService.getUserByEmail(currentUserEmail);
-        return customerRepository.findByUser_IdAndNameContainingIgnoreCase(owner.getId(), namePart,pageable);
+    public Page<Customer> searchCustomers(Long userId, String namePart,Pageable pageable) {
+        return customerRepository.findByUser_IdAndNameContainingIgnoreCase(userId, namePart,pageable);
     }
     
     
     @Transactional(readOnly = true)
-    public Optional<Customer> searchCustomerByPhone(String currentUserEmail,String customerPhone){
-    	User owner = userService.getUserByEmail(currentUserEmail);
-    	return customerRepository.findByUser_IdAndPhone(owner.getId(), customerPhone);
+    public Optional<Customer> searchCustomerByPhone(Long userId,String customerPhone){
+    	return customerRepository.findByUser_IdAndPhone(userId, customerPhone);
     }
     /**
      * Single choke point for ownership-checked customer lookup. Every
@@ -172,5 +181,17 @@ public class CustomerService {
         return customerRepository.findByIdAndUser_Id(customerId, userId)
                 .orElseThrow(() -> new CustomerNotFoundException(
                         "Customer not found with id: " + customerId));
+    }
+    
+    
+    
+    /*
+     * Get the CustomerBalanceProjection Response that also 
+     * returns the Balance of Customer along with the Customer
+     */
+    @Transactional(readOnly = true)
+    public Page<CustomerBalanceProjection> getCustomersWithBalance(Long userId,String search,Pageable pageable) {
+    	return customerRepository
+    			.findAllCustomersWithBalance(userId,search,pageable);
     }
 }

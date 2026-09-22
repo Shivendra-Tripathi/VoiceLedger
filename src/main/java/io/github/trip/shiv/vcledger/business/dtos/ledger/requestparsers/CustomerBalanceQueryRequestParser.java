@@ -1,9 +1,12 @@
 package io.github.trip.shiv.vcledger.business.dtos.ledger.requestparsers;
 
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 import io.github.trip.shiv.vcledger.business.dtos.ledger.req.CustomerBalanceQueryRequest;
 
+@Component
 public class CustomerBalanceQueryRequestParser implements LedgerIntentRequestParser<CustomerBalanceQueryRequest> {
 
 	@Override

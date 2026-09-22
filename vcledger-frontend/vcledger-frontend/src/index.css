@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Global styles: the "paper" surface and a few reusable skeuomorphic
+ * surface classes. Component files compose these instead of re-declaring
+ * shadow/gradient stacks inline, so the whole app's material language
+ * stays in one place if it ever needs to change.
+ */
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: #f6ecd9;
+    background-image:
+      repeating-linear-gradient(
+        to bottom,
+        rgba(122, 46, 46, 0.05) 0px,
+        rgba(122, 46, 46, 0.05) 1px,
+        transparent 1px,
+        transparent 34px
+      );
+  }
+
+  ::selection {
+    background-color: rgba(201, 150, 44, 0.35);
+  }
+
+  /* Visible keyboard focus everywhere, styled to match the brass accent
+     rather than the browser default blue. */
+  :focus-visible {
+    outline: 2px solid #c9962c;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+@layer utilities {
+  .surface-card {
+    @apply bg-paper-card border border-paper-line rounded-2xl shadow-raised;
+  }
+
+  .surface-pressed {
+    @apply bg-paper-card border border-paper-line rounded-xl shadow-pressed;
+  }
+
+  .brass-divider {
+    background: linear-gradient(to right, transparent, #c9962c 15%, #c9962c 85%, transparent);
+    height: 1px;
+  }
+}
+
+/**
+ * Auth pages (Login, Register, AuthLayout, LedgerField) were built as
+ * plain className components rather than Tailwind-in-JSX, so their classes
+ * are defined here using the same tokens as the rest of the app (paper,
+ * maroon, brass, ink, credit, debit — see tailwind.config.js) to keep the
+ * sign-in flow visually part of the same ledger book as everything after it.
+ */
+@layer components {
+  .ledger-page {
+    @apply min-h-screen w-full flex items-center justify-center px-4 py-10;
+  }
+
+  .ledger-book {
+    @apply w-full max-w-md;
+  }
+
+  .ledger-masthead {
+    @apply flex items-center gap-3 mb-6 justify-center;
+  }
+
+  .ledger-masthead__mark {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center shrink-0
+      bg-gradient-to-b from-brass-light to-brass border border-brass-dark/40
+      shadow-raised-sm font-display font-semibold text-maroon-dark text-lg;
+  }
+
+  .ledger-masthead__text {
+    @apply text-left;
+  }
+
+  .ledger-masthead__title {
+    @apply font-display font-semibold text-ink leading-tight;
+  }
+
+  .ledger-masthead__tagline {
+    @apply text-xs text-ink-soft leading-tight;
+  }
+
+  .ledger-tabs {
+    @apply flex gap-1 p-1 mb-5 rounded-full surface-pressed;
+  }
+
+  .ledger-tab {
+    @apply flex-1 text-center rounded-full py-2 text-sm font-semibold text-ink-soft
+      no-underline transition-colors duration-150 hover:text-ink;
+  }
+
+  .ledger-tab--active {
+    @apply bg-gradient-to-b from-brass-light to-brass text-maroon-dark
+      shadow-raised-sm hover:text-maroon-dark;
+  }
+
+  .ledger-card {
+    @apply surface-card overflow-hidden;
+  }
+
+  .ledger-card__rule {
+    @apply brass-divider;
+  }
+
+  .ledger-card__body {
+    @apply p-6 sm:p-8;
+  }
+
+  .ledger-card__title {
+    @apply font-display text-xl font-semibold text-ink;
+  }
+
+  .ledger-card__subtitle {
+    @apply text-sm text-ink-soft mt-1;
+  }
+
+  .ledger-form {
+    @apply flex flex-col gap-4 mt-6;
+  }
+
+  .ledger-form__success {
+    @apply text-sm font-medium text-credit bg-credit-soft rounded-lg px-3 py-2 mb-1;
+  }
+
+  .ledger-form__error {
+    @apply text-sm font-medium text-debit;
+  }
+
+  .ledger-field {
+    @apply flex flex-col gap-1.5;
+  }
+
+  .ledger-field__label {
+    @apply text-sm font-semibold text-ink;
+  }
+
+  .ledger-field__input {
+    @apply w-full rounded-xl surface-pressed px-4 py-3 font-body text-sm text-ink
+      outline-none transition-shadow duration-150;
+  }
+
+  .ledger-field__input--error {
+    @apply ring-2 ring-debit/50;
+  }
+
+  .ledger-field__error {
+    @apply text-xs font-medium text-debit;
+  }
+
+  .ledger-button {
+    @apply w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+      font-body font-semibold text-sm transition-all duration-150
+      bg-gradient-to-b from-brass-light to-brass text-maroon-dark
+      shadow-raised-sm border border-brass-dark/40
+      hover:from-brass hover:to-brass-dark
+      active:shadow-pressed active:translate-y-px
+      disabled:opacity-50 disabled:cursor-not-allowed disabled:active:translate-y-0;
+  }
+
+  .ledger-button--ghost {
+    @apply bg-transparent text-ink-soft shadow-none border border-transparent
+      hover:bg-paper-line/50;
+  }
+
+  .ledger-switch {
+    @apply text-sm text-ink-soft text-center mt-5;
+  }
+
+  .ledger-switch a {
+    @apply text-brass-dark font-semibold no-underline hover:underline;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -2,6 +2,8 @@ package io.github.trip.shiv.vcledger.business.dtos.ledger.requestexecutors;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import io.github.trip.shiv.vcledger.business.dtos.ledger.req.CustomerBalanceQueryRequest;
@@ -27,7 +29,8 @@ public class CustomerBalanceQueryRequestExecutor implements LedgerIntentRequestE
 	private final TransactionService transactionService;
 	
 	
-	
+	private final static Logger logger =
+			LoggerFactory.getLogger(CustomerBalanceQueryRequestExecutor.class);
 	@Override
 	public LedgerResponse execute(LedgerIntentRequest request) {
 		
@@ -50,19 +53,21 @@ public class CustomerBalanceQueryRequestExecutor implements LedgerIntentRequestE
 		//Load all the Customers with the name
 		List<CustomerBalanceData> customers = 
 				customerService.searchCustomers(
-						user.getEmail(),
+						user.getId(),
 						queryRequest.getCustomerName())
 				.stream()
 				.map(
 						customer -> new CustomerBalanceData(
 								PersonInfo.fromCustomer(customer),
-								transactionService.getCustomerBalance(user.getEmail(), customer.getId()))
+								transactionService.getCustomerBalance(user.getId(), customer.getId()))
 						)
 				.toList();
 		
 		/*
 		 * CASE 1 : When the Customer Name is not found in the database
 		 */
+		
+		logger.info("Returning the response to the Customer Balance Query ");
 		if(customers.isEmpty()) {
 			return new CustomerNotFoundFailureResponse(queryRequest.getCustomerName());
 		}

@@ -1,0 +1,598 @@
+I am developing the frontend of my **VcLedger** application using React. I want you to implement a **CustomerSelectionCard** for the Voice Ledger page.
+
+## 1. Existing Architecture
+
+The current `VoiceLedgerPage`:
+
+* Records audio using a custom `useAudioRecorder` hook.
+* Sends the recorded audio to the backend using `sendVoiceCommand(audioBlob)`.
+* Receives a structured response from the backend.
+* Displays responses in the upper ledger/conversation section.
+* Currently, responses are rendered generically, but I now want to introduce a **scalable, registry-based architecture for interactive response components**.
+
+The architecture must allow me to add many different interactive cards in the future, for example:
+
+* `CustomerSelectionCard`
+* `ConfirmTransactionCard`
+* `CustomerBalanceCard`
+* `TransactionHistoryCard`
+* `DeleteTransactionCard`
+* etc.
+
+Do **not** implement this as a large `if/else` or `switch` directly inside `VoiceLedgerPage`.
+
+---
+
+## 2. Required Architecture
+
+Use a **registry-based response rendering architecture**.
+
+The conceptual flow must be:
+
+```text
+Backend Response
+       ↓
+response.type
+       ↓
+Response Registry
+       ↓
+Corresponding React Component
+       ↓
+Interactive UI
+       ↓
+User Action
+       ↓
+Backend API Request
+       ↓
+New Backend Response
+       ↓
+Registry renders the next appropriate component
+```
+
+For example:
+
+```text
+SELECT_CUSTOMER
+       ↓
+CustomerSelectionCard
+```
+
+Later:
+
+```text
+CONFIRM_TRANSACTION
+       ↓
+ConfirmTransactionCard
+```
+
+The `VoiceLedgerPage` should remain an **orchestrator**, not a component containing the implementation of every response type.
+
+Create an appropriate structure such as:
+
+```text
+src/
+├── components/
+│   └── ledger/
+│       ├── responses/
+│       │   ├── CustomerSelectionCard.jsx
+│       │   ├── ...
+│       │
+│       ├── LedgerResponseRenderer.jsx
+│       └── ledgerResponseRegistry.js
+│
+├── api/
+│   └── ...
+│
+└── pages/
+    └── VoiceLedgerPage.jsx
+```
+
+You may modify this structure if you have a better scalable design, but explain the reason.
+
+---
+
+# 3. Backend Response Format
+
+The backend response that indicates customer selection will have the following structure:
+EXAMPLE RESPONSE FORMAT :
+```text
+{
+    "operationId": "OP-6cdd7249-6d62-4c9c-aa0b-596e1e704af7",
+    "message": "Select the Appropriate Customer",
+    "customers": [
+        {
+            "id": 1,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 2,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 3,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 4,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 5,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 6,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 7,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        },
+        {
+            "id": 8,
+            "name": "Ranjit",
+            "photoUrl": null,
+            "type": "CUSTOMER"
+        }
+    ],
+    "responseType": "SELECTION"
+}
+```
+
+Study this format carefully.
+
+The implementation must use the actual fields from this response rather than inventing fields.
+
+The response contains the information required to display the customers that the user can select.
+
+---
+
+# 4. CustomerSelectionCard Requirements
+
+Implement a reusable:
+
+```text
+CustomerSelectionCard
+```
+
+The card should:
+
+1. Display the customers provided by the backend.
+2. Clearly indicate that the user needs to select the appropriate customer.
+3. Allow the user to select **one customer**.
+4. Be fully interactive.
+5. Use the customer's actual ID/value from the backend rather than relying only on the displayed name.
+6. Handle the selected customer cleanly.
+7. Send the appropriate request to the backend after selection.
+8. Prevent duplicate submissions.
+9. Handle loading state while the selection request is being processed.
+10. Handle backend/API errors gracefully.
+11. Be reusable for different situations where customer selection may be required.
+
+Do not hard-code customer names.
+
+---
+
+# 5. Request After Customer Selection
+
+Once the user selects a customer, the frontend must send a backend request.
+
+The request format is:
+EXAMPLE FORMAT :
+```text
+http://localhost:8080/api/voicecommand/confirmcustomer?operationId=OP-8ff7bf24-827c-440e-9810-16b5a248238c&customerId=2
+```
+
+Use this exact format.
+
+Create an appropriate API function rather than placing the HTTP request directly inside the visual component if that is consistent with the existing project architecture.
+
+For example, the conceptual separation should be:
+
+```text
+CustomerSelectionCard
+        ↓
+onCustomerSelect(...)
+        ↓
+parent/application logic
+        ↓
+API service
+        ↓
+Backend
+```
+
+Keep UI logic and API communication appropriately separated.
+
+---
+
+# 6. Lock the Card After Selection
+
+This is extremely important.
+
+Once the user selects a customer:
+
+```text
+CustomerSelectionCard
+        ↓
+Customer selected
+        ↓
+Card becomes locked
+```
+
+After selection:
+
+* The user must no longer be able to select another customer.
+* Customer-selection buttons/options must become disabled.
+* The card should visually communicate that the selection has been completed.
+* The selected customer should remain clearly visible.
+* The component must not accept another selection while the request is being processed.
+* After the backend request succeeds, the component must remain locked.
+* Do not allow double-clicks or duplicate API requests.
+
+Conceptually:
+
+```text
+ACTIVE
+  ↓
+User selects customer
+  ↓
+SUBMITTING
+  ↓
+Backend response
+  ↓
+LOCKED
+```
+
+The locked state should be represented explicitly rather than relying only on incidental button disabling.
+
+---
+
+# 7. Important State Consideration
+
+Do not simply remove the CustomerSelectionCard after the user selects a customer.
+
+The conversation/ledger should preserve what happened.
+
+For example:
+
+```text
+User:
+Create transaction for Raju
+
+System:
+Select a customer:
+
+┌─────────────────────────────┐
+│ Select Customer             │
+│                             │
+│ ○ Raju                      │
+│ ○ Rajesh                    │
+│ ○ Rahul                     │
+└─────────────────────────────┘
+
+        ↓ User selects Raju
+
+System:
+┌─────────────────────────────┐
+│ Customer Selected           │
+│                             │
+│ ✓ Raju                      │
+│                             │
+│ Selection completed         │
+└─────────────────────────────┘
+```
+
+The exact visual design will be determined by the design instructions I provide below.
+
+---
+
+# 8. Registry-Based Architecture
+
+Create a response registry.
+
+Conceptually:
+
+```js
+const ledgerResponseRegistry = {
+    SELECT_CUSTOMER: CustomerSelectionCard,
+
+    // Future components:
+    // CONFIRM_TRANSACTION: ConfirmTransactionCard,
+    // CUSTOMER_BALANCE: CustomerBalanceCard,
+    // TRANSACTION_HISTORY: TransactionHistoryCard,
+};
+```
+
+Then create a generic response renderer:
+
+```text
+LedgerResponseRenderer
+        ↓
+looks at response.type
+        ↓
+finds component in registry
+        ↓
+renders corresponding component
+```
+
+Do not put the response-type logic directly inside `VoiceLedgerPage`.
+
+The renderer should be generic enough that adding another response type requires primarily:
+
+1. Creating the new component.
+2. Registering it in the registry.
+
+It should not require rewriting the entire Voice Ledger page.
+
+---
+
+# 9. Action Handling
+
+Design the components so that interactive cards can communicate user actions back to the parent/application layer.
+
+For example:
+
+```text
+CustomerSelectionCard
+        ↓
+onAction({
+    type: "CUSTOMER_SELECTED",
+    customerId: ...
+})
+        ↓
+VoiceLedgerPage / application controller
+        ↓
+API service
+```
+
+Do not tightly couple `CustomerSelectionCard` to the entire VoiceLedger application.
+
+The card should primarily be responsible for:
+
+* rendering its UI
+* managing its local interaction state
+* reporting the user's action
+
+The application layer should coordinate the larger workflow.
+
+---
+
+# 10. Scalability Requirement
+
+This architecture must be designed assuming that the application will eventually contain **dozens of response types and interactive cards**.
+
+Avoid:
+
+```js
+if (response.type === ...)
+else if (response.type === ...)
+else if (...)
+```
+
+inside `VoiceLedgerPage`.
+
+Avoid a massive monolithic component.
+
+Avoid duplicating API/request logic across components when it can reasonably be centralized.
+
+The architecture should make this easy:
+
+```text
+New backend response
+        ↓
+New React card
+        ↓
+Register component
+        ↓
+Automatically render based on response.type
+```
+
+---
+
+# 11. Error and Loading States
+
+The CustomerSelectionCard should properly handle:
+
+### Initial state
+
+```text
+Customer options available
+```
+
+### Submitting
+
+```text
+User selected customer
+       ↓
+Request in progress
+```
+
+The UI should clearly communicate that the request is being processed.
+
+### Success
+
+```text
+Selection completed
+       ↓
+Card locked
+```
+
+### Failure
+
+If the backend request fails:
+
+* Show an appropriate error.
+* Do not incorrectly mark the selection as successfully completed.
+* Decide carefully whether retrying the request should be possible.
+* Avoid duplicate requests.
+* Preserve the selected customer appropriately.
+
+Explain your state-management decision.
+
+---
+
+# 12. Design Requirements
+
+I will provide the visual/design language separately.
+
+Follow these design instructions exactly:
+
+```text
+[PASTE DESIGN STYLE / UI REQUIREMENTS HERE]
+```
+
+The CustomerSelectionCard must feel like a native part of the existing VcLedger interface.
+
+Do not introduce an unrelated visual style.
+
+Use the project's existing:
+
+* Tailwind configuration
+* typography
+* spacing
+* colors
+* borders
+* shadows
+* animations
+* button styles
+* responsive behavior
+
+where appropriate.
+
+Do not replace existing design conventions unless necessary.
+
+---
+
+# 13. Existing Code
+
+I will provide the relevant existing files below.
+
+Use the existing architecture rather than unnecessarily rewriting working code.
+
+### VoiceLedgerPage
+
+```text
+[PASTE CURRENT VoiceLedgerPage.jsx HERE]
+```
+
+### Existing API client
+
+```text
+[PASTE API CLIENT HERE]
+```
+
+### Existing voice service
+
+```text
+[PASTE voiceService.js HERE]
+```
+
+### Existing MessageBubble / related components
+
+```text
+[PASTE RELEVANT COMPONENTS HERE]
+```
+
+---
+
+# 14. Implementation Expectations
+
+Before writing code:
+
+1. Analyze the existing architecture.
+2. Identify how the current VoiceLedgerPage stores and displays responses.
+3. Identify how API requests are currently implemented.
+4. Identify the appropriate integration point for the response registry.
+5. Explain the proposed component/data flow briefly.
+6. Then implement the solution.
+
+Do not unnecessarily rewrite unrelated parts of the application.
+
+Prefer clean, maintainable React architecture over the shortest possible implementation.
+
+---
+
+# 15. Important Constraints
+
+* Use React functional components and hooks.
+* Use the existing project's conventions.
+* Use Tailwind CSS if the project already uses it.
+* Do not introduce a state-management library unless it is genuinely necessary.
+* Do not hard-code backend data.
+* Do not hard-code customer names.
+* Do not put backend URLs directly inside UI components.
+* Keep API calls in the appropriate API/service layer.
+* Prevent duplicate customer-selection requests.
+* Lock the card after successful selection.
+* Make the response renderer registry-based.
+* Make adding future response cards straightforward.
+* Preserve the conversation history.
+* Ensure the architecture works with multiple interactive cards appearing over time.
+
+---
+
+# 16. What I Want From You
+
+Provide:
+
+### A. Architecture
+
+Explain the final architecture and data flow.
+
+### B. File Structure
+
+Show the relevant files and their responsibilities.
+
+### C. Implementation
+
+Provide the complete code for the necessary new/modified files.
+
+### D. Integration
+
+Clearly explain exactly what needs to change in `VoiceLedgerPage`.
+
+### E. Future Extension
+
+Show a small example of how I would add a future:
+
+```text
+CONFIRM_TRANSACTION
+```
+
+card without redesigning the existing architecture.
+
+### F. State Flow
+
+Explain the state transitions of `CustomerSelectionCard`:
+
+```text
+AVAILABLE
+    ↓
+USER_SELECTS
+    ↓
+SUBMITTING
+    ↓
+SUCCESS → LOCKED
+
+or
+
+SUBMITTING
+    ↓
+ERROR → RETRYABLE
+```
+
+The final implementation should be production-quality, scalable, and consistent with the existing VcLedger architecture rather than being a quick one-off implementation.

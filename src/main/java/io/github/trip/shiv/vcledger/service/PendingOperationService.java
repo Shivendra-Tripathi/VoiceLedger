@@ -12,20 +12,30 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.CreateTransactionOperation;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.operations.LedgerOperation;
 import io.github.trip.shiv.vcledger.business.dtos.ledger.res.LedgerResponse;
+import io.github.trip.shiv.vcledger.business.dtos.ledger.res.TransactionConfirmationResponse;
+import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.PersonInfo;
+import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.TransactionPreview;
 import io.github.trip.shiv.vcledger.business.exceptions.PendingOperationNotFoundException;
 import io.github.trip.shiv.vcledger.business.factories.LedgerOperationFactory;
 import io.github.trip.shiv.vcledger.business.factories.PendingOperationFactory;
 import io.github.trip.shiv.vcledger.business.processors.interfaces.LedgerOperationExecutorDelegator;
+import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.PendingOperation;
 import io.github.trip.shiv.vcledger.entity.PendingOperation.Status;
+import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.repository.PendingOperationRepository;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class PendingOperationService {
+	
+	private final UserService userService;
+	
+	private final CustomerService customerService;
 
     private final PendingOperationRepository pendingOperationRepository;
 
@@ -166,6 +176,60 @@ public class PendingOperationService {
 
     
     
+    @Transactional
+    public LedgerResponse selectCustomer(
+    		String operationId,
+    		Long shopkeeperId,
+    		Long customerId) throws JsonMappingException, JsonProcessingException {
+   
+    	
+    	//Load the Pending operation
+    	PendingOperation pendingOperation =
+    			getByOperationId(operationId, shopkeeperId);
+    	
+    	//Load the User,Customer 
+    	User user =
+    			userService.getUserById(shopkeeperId);
+    	
+    	Customer customer =
+    			customerService.getCustomerById(shopkeeperId, customerId);
+
+    	//Check whether the Operation is Eligible to Change the Customer
+    	if(pendingOperation.getStatus()!=Status.WAITING_FOR_CUSTOMER_SELECTION) {
+    		throw new IllegalArgumentException("Customer Selection for this Operation is not allowed.");
+    	}
+    	
+    	
+    	//Get the LedgerOperation
+    	LedgerOperation ledgerOperation =
+    			ledgerOperationFactory.fromPendingOperation(pendingOperation);
+    	
+    	
+    	//Only do customer Selection if Proper LedgerOperation
+    	if(ledgerOperation instanceof CreateTransactionOperation operation) {
+    		operation.setCustomerId(customerId);
+    		pendingOperation.setPayload(ledgerOperationFactory.serialize(operation));
+    		pendingOperation.setStatus(Status.PENDING);
+    		
+    		return new TransactionConfirmationResponse(
+					"Confirm the Transaction", 
+					pendingOperation.getOperationId(), 
+					pendingOperation.getIntentKey(), 
+					new TransactionPreview(
+							PersonInfo.fromShopkeeper(user),
+							PersonInfo.fromCustomer(customer),
+							operation.getAmount(),
+							operation.getMoneyDirection()));
+    	}
+    	
+    	
+    	throw new IllegalArgumentException("This Operation does not allow customer selection.");
+    }
+    
+    
+    
+    
+    
     /**
      * Cancels a pending operation.
      */
@@ -181,7 +245,7 @@ public class PendingOperationService {
                         shopkeeperId
                 );
 
-        if (pendingOperation.getStatus() != Status.PENDING) {
+        if (pendingOperation.getStatus() != Status.PENDING && pendingOperation.getStatus() != Status.WAITING_FOR_CUSTOMER_SELECTION) {
             throw new IllegalStateException(
                     "Only pending operations can be cancelled"
             );

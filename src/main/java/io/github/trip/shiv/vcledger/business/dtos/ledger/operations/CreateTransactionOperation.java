@@ -11,9 +11,10 @@ import io.github.trip.shiv.vcledger.business.enums.OperationType;
 import lombok.Getter;
 
 @Getter
+
 public class CreateTransactionOperation implements LedgerOperation {
 
-    private final Long customerId;
+    private  Long customerId;
     private final BigDecimal amount;
     private final OperationType operationType;
     private final MoneyDirection moneyDirection;
@@ -39,4 +40,8 @@ public class CreateTransactionOperation implements LedgerOperation {
     public String getIntentKey() {
         return intentKey;
     }
+
+	public void setCustomerId(Long customerId2) {
+		this.customerId = customerId2;
+	}
 }

@@ -1,0 +1,10 @@
+In my VCLedger Application, I want to have a dedicated page that displays all the transactions done by the User.
+
+This page must implement pagination and must show at most 12 transactions at a time.
+
+You have to design the page that follows my design style.
+
+This page displays all the transactions that are done by the customer.
+
+*You have to create a card named "DetailedTransactionCard" that must display the amount involved in the transaction,
+customer involved in the transaction , photo of the 

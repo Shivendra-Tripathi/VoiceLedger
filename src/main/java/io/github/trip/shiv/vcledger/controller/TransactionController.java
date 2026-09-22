@@ -62,7 +62,7 @@ public class TransactionController {
         User user = securityUtils.getAuthenticatedUser();
         
         Transaction transaction = 
-        		transactionService.createTransaction(user.getEmail(), request.getCustomerId(),
+        		transactionService.createTransaction(user.getId(), request.getCustomerId(),
         		request.getAmount(), request.getType(), request.getDescription());
         
         return ResponseEntity
@@ -84,7 +84,7 @@ public class TransactionController {
     		Pageable pageable) {
         User user = securityUtils.getAuthenticatedUser();
         Page<TransactionResponse> response = 
-        		transactionService.getTransactions(user.getEmail(),pageable)
+        		transactionService.getTransactions(user.getId(),pageable)
         		.map(transaction -> new TransactionResponse(transaction))
         		;
         return ResponseEntity.ok(response);
@@ -98,7 +98,7 @@ public class TransactionController {
     @GetMapping("/{id}")
     public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable Long id) {
     	User user = securityUtils.getAuthenticatedUser();
-    	Transaction transaction = transactionService.getTransactionById(user.getEmail(), id);
+    	Transaction transaction = transactionService.getTransactionById(user.getId(), id);
     	return ResponseEntity.ok(new TransactionResponse(transaction));
     }
 
@@ -113,7 +113,7 @@ public class TransactionController {
        User user = securityUtils.getAuthenticatedUser();
     
 	   Transaction transaction = transactionService.updateTransaction(
-			   user.getEmail(), id, request.getAmount(), request.getType(), request.getDescription());
+			   user.getId(), id, request.getAmount(), request.getType(), request.getDescription());
 	   
 	    return ResponseEntity
 	    		.ok(new TransactionResponse(transaction));
@@ -129,7 +129,7 @@ public class TransactionController {
         
     	User user = securityUtils.getAuthenticatedUser();
         
-    	transactionService.deleteTransaction(user.getEmail(), id);
+    	transactionService.deleteTransaction(user.getId(), id);
      
     	return ResponseEntity.ok(new MessageResponse("Successfully Deleted the Transaction"));
     }

@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +18,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.github.trip.shiv.vcledger.business.dtos.customercontroller.req.CreateCustomerRequest;
 import io.github.trip.shiv.vcledger.business.dtos.customercontroller.req.UpdateCustomerRequest;
-import io.github.trip.shiv.vcledger.business.dtos.customercontroller.res.BalanceResponse;
-import io.github.trip.shiv.vcledger.business.dtos.customercontroller.res.CustomerResponse;
 import io.github.trip.shiv.vcledger.business.dtos.general.res.MessageResponse;
 import io.github.trip.shiv.vcledger.business.dtos.transactioncontroller.res.TransactionResponse;
+import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.CustomerBalanceData;
+import io.github.trip.shiv.vcledger.business.dtos.visualpreviews.PersonInfo;
 import io.github.trip.shiv.vcledger.business.utilities.SecurityUtils;
 import io.github.trip.shiv.vcledger.entity.Customer;
 import io.github.trip.shiv.vcledger.entity.User;
@@ -65,13 +69,24 @@ public class CustomerController {
      * Create a customer.
      * Requires authentication (JWT).
      */
-    @PostMapping
-    public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody CreateCustomerRequest request) {
+	@PostMapping(
+		    consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+		)
+	public ResponseEntity<CustomerBalanceData> createCustomer(
+		        @Valid @RequestPart("customer") CreateCustomerRequest request,
+		        @RequestPart(value = "image", required = false) MultipartFile image) {
+		
        User user = securityUtils.getAuthenticatedUser();
-       Customer customer = customerService.createCustomer(user.getEmail(),request.getName(), request.getPhone());
+       Customer customer = customerService.createCustomer(user.getId(),request.getName(), request.getPhone(),image);
        
+       CustomerBalanceData response = 
+    		   CustomerBalanceData.builder()
+    		   .balance(BigDecimal.ZERO)
+    		   .customer(PersonInfo.fromCustomer(customer))
+    		   .build();
+    		         
        return ResponseEntity.status(HttpStatus.CREATED)
-    	        .body(new CustomerResponse(customer));
+    	        .body(response);
     }
 
     /**
@@ -80,20 +95,20 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping
-    public ResponseEntity<Page<CustomerResponse>> getAllCustomers(
+    public ResponseEntity<Page<PersonInfo>> getAllCustomers(
     		@PageableDefault(
     				page=0,
     				size=10,
     				sort="createdAt",
-					direction = Sort.Direction.DESC)
+					direction = Sort.Direction.ASC)
     		Pageable pageable) {
     	User user = securityUtils.getAuthenticatedUser();
     	
-       Page<CustomerResponse> customers = 
-    		   customerService.getCustomers(user.getEmail(),pageable)
-    		   .map(customer -> new CustomerResponse(customer))
-    		   ;
-       return ResponseEntity.ok(customers);
+        Page<PersonInfo> personInfos =
+        		customerService.getCustomers(user.getId(), pageable)
+    			.map(customer -> PersonInfo.fromCustomer(customer));
+        
+    	return  ResponseEntity.ok(personInfos);		   
     }
 
     /**
@@ -102,10 +117,10 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping("/{id}")
-    public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable Long id) {
+    public ResponseEntity<PersonInfo> getCustomerById(@PathVariable Long id) {
         User user = securityUtils.getAuthenticatedUser();
-    	Customer customer = customerService.getCustomerById(user.getEmail(), id);
-    	return ResponseEntity.ok(new CustomerResponse(customer));
+    	Customer customer = customerService.getCustomerById(user.getId(), id);
+    	return ResponseEntity.ok(PersonInfo.fromCustomer(customer));
     }
 
     /**
@@ -114,13 +129,13 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @PutMapping("/{id}")
-    public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable Long id,
+    public ResponseEntity<PersonInfo> updateCustomer(@PathVariable Long id,
                                                   @Valid @RequestBody UpdateCustomerRequest request) {
         
     	User user = securityUtils.getAuthenticatedUser();
-    	Customer customer = customerService.updateCustomer(user.getEmail(), id, request.getNewName(), request.getNewPhone());
+    	Customer customer = customerService.updateCustomer(user.getId(), id, request.getNewName(), request.getNewPhone());
     	return ResponseEntity
-    			.ok(new CustomerResponse(customer));
+    			.ok(PersonInfo.fromCustomer(customer));
     }
 
     /**
@@ -131,7 +146,7 @@ public class CustomerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<MessageResponse> deleteCustomer(@PathVariable Long id) {
     	User user = securityUtils.getAuthenticatedUser();
-    	customerService.deleteCustomer(user.getEmail(), id);
+    	customerService.deleteCustomer(user.getId(), id);
     	return ResponseEntity.ok(new MessageResponse("Successfully Deleted Customer."));
     }
 
@@ -142,7 +157,7 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping("/search/{name}")
-    public ResponseEntity<Page<CustomerResponse>> searchCustomers(@PathVariable String name,
+    public ResponseEntity<Page<PersonInfo>> searchCustomers(@PathVariable String name,
     		@PageableDefault(
     				page=0,
     				size=10,
@@ -150,9 +165,9 @@ public class CustomerController {
 					direction = Sort.Direction.DESC)
     		Pageable pageable) {
     	User user = securityUtils.getAuthenticatedUser();
-    	Page<CustomerResponse> customerResponses = 
-    			customerService.searchCustomers(user.getEmail(), name,pageable)
-    			.map(customer->new CustomerResponse(customer))
+    	Page<PersonInfo> customerResponses = 
+    			customerService.searchCustomers(user.getId(), name,pageable)
+    			.map(customer->PersonInfo.fromCustomer(customer))
     			;
     	return ResponseEntity.ok(customerResponses);
     }
@@ -174,7 +189,7 @@ public class CustomerController {
    
     	User user = securityUtils.getAuthenticatedUser();
     	Page<TransactionResponse> responses = 
-    			transactionService.getCustomerTransactions(user.getEmail(), customerId,pageable)
+    			transactionService.getCustomerTransactions(user.getId(), customerId,pageable)
     			.map(transaction->new TransactionResponse(transaction))
     			;
     	return ResponseEntity.ok(responses);
@@ -187,9 +202,46 @@ public class CustomerController {
      * Requires authentication (JWT).
      */
     @GetMapping("/{customerId}/balance")
-    public ResponseEntity<BalanceResponse> getCustomerBalance(@PathVariable Long customerId) {
+    public ResponseEntity<CustomerBalanceData> getCustomerBalance(@PathVariable Long customerId) {
         User user = securityUtils.getAuthenticatedUser();
-        BigDecimal balance= transactionService.getCustomerBalance(user.getEmail(), customerId);
-        return ResponseEntity.ok(new BalanceResponse(balance));
+        Customer customer = customerService.getCustomerById(user.getId(), customerId);
+        BigDecimal balance= transactionService.getCustomerBalance(user.getId(), customerId);
+        
+        CustomerBalanceData response = 
+        		CustomerBalanceData.builder()
+        		.balance(balance)
+        		.customer(PersonInfo.fromCustomer(customer))
+        		.build();
+        
+        return ResponseEntity.ok(response);
+    }
+    
+    
+    /**
+     * GET /api/customers/balance
+     * Get all customers belonging to the authenticated user.
+     * Requires authentication (JWT).
+     */
+    @GetMapping("/balances")
+    public ResponseEntity<Page<CustomerBalanceData>> getAllCustomersWithBalance(
+
+            @RequestParam(defaultValue = "") String search,
+
+            @PageableDefault(
+                    page = 0,
+                    size = 10,
+                    sort = "createdAt",
+                    direction = Sort.Direction.ASC
+            )
+            Pageable pageable) {
+
+        User user = securityUtils.getAuthenticatedUser();
+
+        Page<CustomerBalanceData> customers =
+                customerService
+                        .getCustomersWithBalance(user.getId(), search, pageable)
+                        .map(CustomerBalanceData::from);
+
+        return ResponseEntity.ok(customers);
     }
 }

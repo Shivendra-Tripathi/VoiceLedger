@@ -28,4 +28,19 @@ public class LedgerOperationFactory {
     	JsonNode json = objectMapper.readTree(pendingOperation.getPayload());
     	return ledgerOperationDeserializerDelegator.delegate(pendingOperation.getIntentKey(), json);
     }
+    
+    
+    public String serialize(LedgerOperation operation) {
+
+        try {
+            return objectMapper.writeValueAsString(operation);
+
+        } catch (JsonProcessingException e) {
+
+            throw new IllegalStateException(
+                    "Failed to serialize ledger operation",
+                    e
+            );
+        }
+    }
 }

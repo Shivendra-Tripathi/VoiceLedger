@@ -52,7 +52,7 @@ public class CreateTransactionOperationRequestExecutor implements LedgerIntentRe
 		//Load all the Customers with the name
 		List<Customer> customers = 
 				customerService.searchCustomers(
-						user.getEmail(),
+						user.getId(),
 						createRequest.getCustomerName());
 		
 		/*
