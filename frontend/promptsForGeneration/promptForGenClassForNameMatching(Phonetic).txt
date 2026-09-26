@@ -1,0 +1,56 @@
+I want to have a class that I can use to match a name spoken to a list of names.
+For Example,
+User speaks "Amit" ,and we have names =["Amit","Ameet","Amita","Rajat","Sumit",...]
+We pass the "Amit" and names and a minimum confidence score in the range[0-1],
+then this function in the class must return the names of the persons that matched
+with the spoken name "Amit", sorted in decreasing order of their cofidence score.
+
+The name of the Class must be : PhoneticNameMatcher
+
+======================================================================
+Technical Details for Designing above class :
+1) In the first layer user the Apache Codec Library to find the words with the Similiar phonetics.
+2) In layer 2,for the names that have relatively less 
+phonetic Similarity use Levenstein Distance,Jaro-Winkler Technique , N-gram Similarity all together
+in a highly calibrated way to match Indian names.(You use the apache library)
+3) The class must be Generic so that i can pass any kind of Objects to it.
+
+Given below is a description of Generic Structure.
+
+For example we are going to match the name of Customers , the Customers with
+confidence score greater than the threshold would be returned.
+I would pass a function to the matcher that fetches the String to be matched
+from the Customer i.e his name.
+
+PhoneticNameMatcher<Customer> customerNameMatcher =
+                            new PhoneticNameMatcher<>(customer -> customer.getName());
+ArrayList<Customer> matched =
+                            customerNameMatcher.findSimiliarMatches("Amit",customers,minConfidenceScore=0.85);
+//==============================================================================
+
+
+Architecture :
+
+Layer 1 : Phonetic Based Matching
+            |
+            | -------------> Returns two set of Candidates
+                                        |
+                                        |----> Set 1 Very Strong Matches
+                                        |----> Set 2 Matches but with relatively lower score
+            Set 1 Matches must be in the Final Result 
+            Set 2 Result passes to the Second Layer
+Layer 2 : Name Structure Based Matching
+            -Uses Levenstein Distance , Jaro Winkler , bigram Dice Similarity and Consonant Structure
+            |
+            |-------------> Returns the candidates from Set 2 that have score greater than min_confidence score that i passed
+
+Final Result : 
+        List of Candidates that are in Set 1 in Layer 1. + List of Candidates that have confidence_score greater than the min_confidence.
+        Also the Candidates in Set 1 must be Sorted , Also the Candidates from Layer 2 must be Sorted.
+        In Final Result the Candidates from Set 1 must appear above the Candidates from Layer 2.
+
+================================================================================
+Create everything in java,spring.
+
+If you need any further information , i can provide it.
+

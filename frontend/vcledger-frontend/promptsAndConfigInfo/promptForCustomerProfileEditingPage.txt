@@ -1,0 +1,36 @@
+Now i want to create a dedicated page where the User(Shopkeeper) can edit his profile.
+There must be a setting icon near the logout button in the VoiceLedgerPage.
+When user clicks on the setting icon, he sees multiple options like , Update Profile,Update Password.
+Each Option(button) when clicked navigates to the appropriate page.
+
+
+For now You have to create the Update Profile Page.
+On this page , he can change his profile photo , name.
+
+Url to change the user profile :
+PUT http://localhost:8080/api/users/me
+
+Request format :
+It must send a form-data with two fields .
+user : {
+    name (his updated name)
+}
+image (his updated profile image)
+
+The content type of the field user is to be explicitly set to application/json.
+
+The Response(sample) Send by the Backend after update:
+{
+    "id": 2,
+    "name": "Shivendra",
+    "photoUrl": "https://res.cloudinary.com/ql8vhy6a/image/upload/v1790175365/vcledger/customer-photos/customer-user2.jpg",
+    "type": "SHOPKEEPER"
+}
+
+
+The updated profile image must be visible in the required places where the shopkeeper's/user's
+image is needed.
+
+The Design style must agree with the overall application.
+
+If You need any further information ask me ?

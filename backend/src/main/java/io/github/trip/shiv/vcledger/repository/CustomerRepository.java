@@ -1,0 +1,121 @@
+package io.github.trip.shiv.vcledger.repository;
+
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import io.github.trip.shiv.vcledger.core.dtos.projections.CustomerBalanceProjection;
+import io.github.trip.shiv.vcledger.core.dtos.projections.CustomerNameAndIdProjection;
+import io.github.trip.shiv.vcledger.entity.Customer;
+
+/**
+ * Repository for Customer records.
+ *
+ * The methods here are shaped around two future needs in particular:
+ *
+ * 1. Ownership-scoped access — every read/write in a multi-tenant ledger
+ *    must be scoped to the requesting User, so most lookups take a userId
+ *    alongside the customer identifier/name to prevent one shopkeeper from
+ *    ever touching another's customers.
+ *
+ * 2. Voice/NLP name resolution — a spoken command like "Ramesh paid 200"
+ *    only gives a name, not an id, so fuzzy/case-insensitive name lookups
+ *    scoped to the current user are essential for turning a transcribed
+ *    name into a Customer row.
+ */
+public interface CustomerRepository extends JpaRepository<Customer, Long> {
+
+    /** All customers belonging to a given shopkeeper. */
+    List<Customer> findByUser_Id(Long userId);
+    Page<Customer> findByUser_Id(Long userId,Pageable pageable);
+
+    /**
+     * Ownership-checked single lookup — use this instead of plain
+     * findById() whenever a request is scoped to the logged-in user, so a
+     * customer id belonging to a different user simply isn't found.
+     */
+    Optional<Customer> findByIdAndUser_Id(Long id, Long userId);
+
+    /**
+     * Exact (case-insensitive) name match within one user's customer list.
+     * Useful when the NLP parser extracts a clean name and a precise match
+     * is expected/preferred.
+     */
+    Optional<Customer> findByUser_IdAndNameIgnoreCase(Long userId, String name);
+
+    /**
+     * Fuzzy name search within one user's customer list, for voice
+     * commands where the transcribed name may be partial or slightly off
+     * (e.g. matching "Ram" against "Ramesh Kumar").
+     */
+    List<Customer> findByUser_IdAndNameContainingIgnoreCase(Long userId, String namePart);
+    Page<Customer> findByUser_IdAndNameContainingIgnoreCase(Long userId, String namePart,Pageable pageable);
+    
+
+    /** Quick existence check, e.g. before creating a duplicate customer. */
+    boolean existsByUser_IdAndNameIgnoreCase(Long userId, String name);
+
+    /** Lookup by phone number, scoped to the owning user. */
+    Optional<Customer> findByUser_IdAndPhone(Long userId, String phone);
+    
+    
+    
+    
+    /*
+     * Returns the Customer Names that are in the list of given names
+     */
+    @Query("""
+    		SELECT c
+    		FROM Customer c
+    		where c.user.id=:userId AND c.id IN :customerIds 
+    		""")
+    List<Customer> findAllCustomersWhichAreIn(Long userId,List<Long> customerIds);
+    
+    
+    
+    
+    
+    
+    
+    @Query("""
+    	    SELECT c AS customer,
+    	           COALESCE(
+    	               SUM(
+    	                   CASE
+    	                       WHEN t.type = io.github.trip.shiv.vcledger.core.enums.TransactionType.CREDIT
+    	                           THEN t.amount
+    	                       WHEN t.type = io.github.trip.shiv.vcledger.core.enums.TransactionType.DEBIT
+    	                           THEN -t.amount
+    	                       ELSE 0
+    	                   END
+    	               ),
+    	               0
+    	           ) AS balance
+    	    FROM Customer c
+    	    LEFT JOIN c.transactions t
+    	    WHERE c.user.id = :userId
+    	      AND LOWER(c.name) LIKE LOWER(CONCAT('%', :search, '%'))
+    	    GROUP BY c
+    	    """)
+    	Page<CustomerBalanceProjection> findAllCustomersWithBalance(
+    	        @Param("userId") Long userId,
+    	        @Param("search") String search,
+    	        Pageable pageable
+    	);
+    
+    
+    
+    
+    @Query("""
+    		SELECT c.id AS id ,c.name AS name
+    		FROM Customer c
+    		WHERE c.user.id=:userId
+    		""")
+    List<CustomerNameAndIdProjection> findAllCustomerNameAndIdBelongingToUser(Long userId);
+}
