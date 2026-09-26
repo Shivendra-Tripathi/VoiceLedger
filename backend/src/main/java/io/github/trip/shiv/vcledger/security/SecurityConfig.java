@@ -74,26 +74,27 @@ public class SecurityConfig {
             HttpSecurity http)
             throws Exception {
 
-    	 http
-         .csrf(csrf -> csrf.disable())
-         .cors(cors -> {})
-         .sessionManagement(session ->
-             session.sessionCreationPolicy(
-                 SessionCreationPolicy.STATELESS
-             )
-         )
-
-         .authorizeHttpRequests(auth -> auth
-        		 .requestMatchers("/api/auth/**", "/error").permitAll()
-             .anyRequest().authenticated()
-         )
-
-         .authenticationProvider(authenticationProvider())
-
-         .addFilterBefore(
-             jwtAuthenticationFilter,
-             UsernamePasswordAuthenticationFilter.class
-         );
+            http
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> {})
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS
+                        )
+                )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                org.springframework.http.HttpMethod.OPTIONS,
+                                "/**"
+                        ).permitAll()
+                        .requestMatchers("/api/auth/**", "/error").permitAll()
+                        .anyRequest().authenticated()
+                )
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
 
      return http.build();
     	
