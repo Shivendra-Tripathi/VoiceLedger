@@ -74,7 +74,7 @@ public class SecurityConfig {
             HttpSecurity http)
             throws Exception {
 
-            http
+        http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .sessionManagement(session ->
