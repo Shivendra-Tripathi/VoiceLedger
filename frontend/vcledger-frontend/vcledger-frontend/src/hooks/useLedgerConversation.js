@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { resolveActionHandler } from '../components/ledger/ledgerActions';
+import { resolveActionHandler } from '../components/ledger/LedgerActions';
 
 /**
  * useLedgerConversation

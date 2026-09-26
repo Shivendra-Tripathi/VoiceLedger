@@ -4,7 +4,8 @@ const JWT_STORAGE_KEY =
   import.meta.env.VITE_JWT_STORAGE_KEY || 'vcledger_token';
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? 'http://localhost:8080/api' : '');
 
 /**
  * Get JWT from localStorage.

@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Check, Loader2, RotateCcw, Users } from 'lucide-react';
 import Avatar from '../../common/Avatar';
 import Button from '../../common/Button';
-import { LEDGER_ACTIONS } from '../ledgerActions';
+import { LEDGER_ACTIONS } from '../LedgerActions';
 
 /**
  * CustomerSelectionCard

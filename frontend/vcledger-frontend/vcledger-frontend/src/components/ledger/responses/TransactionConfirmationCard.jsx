@@ -1,7 +1,7 @@
 import { Check, Loader2, RotateCcw, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import Avatar from '../../common/Avatar';
 import Button from '../../common/Button';
-import { LEDGER_ACTIONS } from '../ledgerActions';
+import { LEDGER_ACTIONS } from '../LedgerActions';
 import { useAuth } from '../../../context/AuthContext';
 
 /**
