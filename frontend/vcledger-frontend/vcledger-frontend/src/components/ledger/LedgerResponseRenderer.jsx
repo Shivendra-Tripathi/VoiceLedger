@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { resolveResponseComponent } from './ledgerResponseRegistry';
+import { resolveResponseComponent } from './LedgerResponseRegistry';
 
 /**
  * LedgerResponseRenderer
