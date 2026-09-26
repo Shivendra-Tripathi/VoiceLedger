@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import io.github.trip.shiv.vcledger.business.dtos.authcontroller.req.LoginRequest;
-import io.github.trip.shiv.vcledger.business.dtos.authcontroller.req.RegisterRequest;
-import io.github.trip.shiv.vcledger.business.dtos.authcontroller.req.UpdatePasswordRequest;
-import io.github.trip.shiv.vcledger.business.dtos.authcontroller.res.LoginResponse;
-import io.github.trip.shiv.vcledger.business.dtos.authcontroller.res.RegisterResponse;
-import io.github.trip.shiv.vcledger.business.utilities.SecurityUtils;
+import io.github.trip.shiv.vcledger.core.dtos.authcontroller.req.LoginRequest;
+import io.github.trip.shiv.vcledger.core.dtos.authcontroller.req.RegisterRequest;
+import io.github.trip.shiv.vcledger.core.dtos.authcontroller.req.UpdatePasswordRequest;
+import io.github.trip.shiv.vcledger.core.dtos.authcontroller.res.LoginResponse;
+import io.github.trip.shiv.vcledger.core.dtos.authcontroller.res.RegisterResponse;
+import io.github.trip.shiv.vcledger.core.utilities.SecurityUtils;
 import io.github.trip.shiv.vcledger.entity.User;
 import io.github.trip.shiv.vcledger.service.AuthService;
 import jakarta.validation.Valid;
@@ -52,9 +52,8 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request) {
     	
     
-        User user = authService.register(request);
-        
-        RegisterResponse response = new RegisterResponse(user.getId(), user.getName(), user.getEmail(), user.getCreatedAt());
+        RegisterResponse response = authService.register(request);
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
@@ -65,7 +64,8 @@ public class AuthController {
      * Authenticate a user and issue access/refresh tokens.
      */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest request) {
     	
     	
     	return ResponseEntity
@@ -74,25 +74,6 @@ public class AuthController {
     }
 
    
-
-//    /**
-//     * Invalidate the current session/refresh token.
-//     */
-//    @PostMapping("/logout")
-//    public ResponseEntity<String> logout(@RequestHeader(value = "Authorization", required = false) String authorization) {
-//        return ResponseEntity
-//        .status(HttpStatus.ACCEPTED)
-//        .body("LogOut Done");
-//    }
-
-//    /**
-//     * Return the currently authenticated user's profile.
-//     */
-//    @GetMapping("/me")
-//    public ResponseEntity<?> getCurrentUser(@RequestHeader(value = "Authorization", required = false) String authorization) {
-//        // TODO: implement fetch-current-user logic
-//        throw new UnsupportedOperationException("Not implemented yet");
-//    }
 
     /**
      * Update the currently authenticated user's password.
