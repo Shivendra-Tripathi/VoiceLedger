@@ -18,8 +18,10 @@ public class CorsConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173",
-                        "https://voice-ledger-steel.vercel.app")
+                List.of(
+                        "http://localhost:5173",
+                        "https://voice-ledger-steel.vercel.app"
+                )
         );
 
         configuration.setAllowedMethods(
