@@ -28,12 +28,9 @@ public class CorsConfig {
                 List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         );
 
-        configuration.setAllowedHeaders(
-                List.of("Authorization", "Content-Type")
-        );
+        configuration.setAllowedHeaders(List.of("*"));
 
-        // Only needed if you later use cookies.
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
